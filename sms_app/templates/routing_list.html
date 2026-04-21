@@ -13,13 +13,43 @@
     .btn-theme:hover { filter: brightness(0.95); }
     .small-input { max-width: 120px; display: inline-block; }
     .cursor-pointer { cursor:pointer; }
+    .routing-page { max-width: 1500px; margin: 0 auto; padding: 16px; }
+    .routing-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 16px var(--shadow-color); overflow: hidden; }
+    .routing-header { background: linear-gradient(135deg, var(--theme-color), var(--theme-dark)); color: #fff; gap: 12px; flex-wrap: wrap; padding: 16px 18px; }
+    .routing-body { background: var(--card-bg); padding: 18px; }
+    .routing-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-header { background: rgba(255,255,255,0.96); color: #222; border: 1px solid rgba(255,255,255,0.65); font-weight: 700; }
+    .btn-header:hover { background: #fff; color: var(--theme-color); }
+    .routing-table-wrap { overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+    .routing-table { margin: 0; min-width: 980px; color: var(--text-primary); }
+    .routing-table thead th { background: linear-gradient(135deg, var(--theme-color), var(--theme-dark)); color: #fff; border: 0; white-space: nowrap; font-weight: 700; padding: 12px 10px; }
+    .routing-table tbody td { background: var(--card-bg); color: var(--text-primary); border-color: var(--border-color); padding: 11px 10px; }
+    .routing-table tbody tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+    .routing-table tbody tr:hover td { background: var(--hover-color); }
+    .route-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 54px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--theme-light); color: var(--theme-color); border: 1px solid rgba(255,102,0,0.25); }
+    .route-badge.off { background: rgba(108,117,125,0.14); color: var(--text-secondary); border-color: var(--border-color); }
+    .routing-lines-container { background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; }
+    .line-row { gap: 8px; flex-wrap: wrap; }
+    .dark-mode .routing-table tbody tr:nth-child(even) td,
+    .dark-mode .routing-lines-container { background: rgba(255,255,255,0.025); }
+    .dark-mode .btn-header { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.22); }
+    .dark-mode .btn-header:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    .routing-actions .btn-light { background: rgba(255,255,255,0.96); color: #222; border: 1px solid rgba(255,255,255,0.65); font-weight: 700; }
+    .routing-actions .btn-light:hover { background: #fff; color: var(--theme-color); }
+    .dark-mode .routing-actions .btn-light { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.22); }
+    .dark-mode .routing-actions .btn-light:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    @media (max-width: 768px) {
+        .routing-page { padding: 10px; }
+        .routing-actions { width: 100%; }
+        .routing-actions .btn { flex: 1 1 150px; }
+    }
 </style>
 
-<div class="container mt-5">
-    <div class="card shadow-lg rounded-4">
-        <div class="card-header bg-theme text-white d-flex justify-content-between align-items-center">
+<div class="routing-page">
+    <div class="routing-card">
+        <div class="routing-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">🔀 Routing Management</h4>
-            <div>
+            <div class="routing-actions">
                 <a href="{% url 'routing_mapping_list' %}">
                     <button class="btn btn-light btn-sm fw-bold">➕ Mapp Routing</button>
                 </a>
@@ -29,15 +59,16 @@
             </div>
         </div>
 
-        <div class="card-body bg-white">
+        <div class="routing-body">
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-info">{{ message }}</div>
                 {% endfor %}
             {% endif %}
 
-            <table class="table table-striped table-hover text-center align-middle">
-                <thead class="table-dark">
+            <div class="routing-table-wrap">
+            <table class="table table-hover text-center align-middle routing-table">
+                <thead>
                     <tr>
                         <th>S.No.</th>
                         <th>Name</th>
@@ -57,9 +88,9 @@
                         <td>{{ r.name }}</td>
                         <td>{{ r.strategy }}</td>
                         <td>{{ r.primary_connect|default:"—" }}</td>
-                        <td>{% if r.apply_rules %}Yes{% else %}No{% endif %}</td>
-                        <td>{% if r.message_retry %}Yes{% else %}No{% endif %}</td>
-                        <td>{% if r.reject_non_peid_messages %}Yes{% else %}No{% endif %}</td>
+                        <td><span class="route-badge {% if not r.apply_rules %}off{% endif %}">{% if r.apply_rules %}Yes{% else %}No{% endif %}</span></td>
+                        <td><span class="route-badge {% if not r.message_retry %}off{% endif %}">{% if r.message_retry %}Yes{% else %}No{% endif %}</span></td>
+                        <td><span class="route-badge {% if not r.reject_non_peid_messages %}off{% endif %}">{% if r.reject_non_peid_messages %}Yes{% else %}No{% endif %}</span></td>
                         <td>{{ r.created_date|date:"Y-m-d H:i" }}</td>
                         <td>
                             <button class="btn btn-outline-theme btn-sm" data-bs-toggle="modal" data-bs-target="#editRoutingModal{{ r.rout_id }}">
@@ -174,6 +205,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>

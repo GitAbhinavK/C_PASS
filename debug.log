@@ -41138,3 +41138,25 @@ Watching for file changes with StatReloader
 "GET /submit_sm_view HTTP/1.1" 200 99860
 "GET /dlr-history/ HTTP/1.1" 200 90010
 "GET /dlr-history/ HTTP/1.1" 200 90042
+Watching for file changes with StatReloader
+"GET /setting/ HTTP/1.1" 200 43306
+"POST /logout/ HTTP/1.1" 302 0
+"GET /login/ HTTP/1.1" 200 19692
+"POST /login/ HTTP/1.1" 302 0
+"GET /dashboard/ HTTP/1.1" 200 44916
+"GET /setting/ HTTP/1.1" 200 49965
+"GET /submit_sm_view HTTP/1.1" 200 101489
+"GET /dashboard/ HTTP/1.1" 200 44916
+"GET /static/image/digiwhiff.png HTTP/1.1" 304 0
+"GET /static/image/image.png HTTP/1.1" 304 0
+"GET /smpp/connections/ HTTP/1.1" 200 51985
+"GET /routings/ HTTP/1.1" 200 82690
+"GET /routing-mapping/ HTTP/1.1" 200 89149
+"GET /routings/ HTTP/1.1" 200 82690
+"GET /smpp/connections/ HTTP/1.1" 200 51985
+"GET /smpp_form HTTP/1.1" 200 109995
+"GET /routing-mapping/ HTTP/1.1" 200 89149
+"GET /routing-mapping/ HTTP/1.1" 200 91023
+"GET /smpp/connections/ HTTP/1.1" 200 51985
+"GET /routing-mapping/ HTTP/1.1" 200 91023
+"GET /routings/ HTTP/1.1" 200 86026

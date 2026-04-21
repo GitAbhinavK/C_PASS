@@ -17,13 +17,30 @@
         border-radius: 14px;
         box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 14px;
     }
+    .mapping-page { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .mapping-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 16px var(--shadow-color); overflow: hidden; }
+    .mapping-header { background: linear-gradient(135deg, var(--theme-color), var(--theme-dark)); color: #fff; gap: 12px; flex-wrap: wrap; padding: 16px 18px; }
+    .mapping-body { background: var(--card-bg); padding: 18px; }
+    .mapping-header h4 { margin: 0; font-weight: 800; }
+    .mapping-header .btn-light { background: rgba(255,255,255,0.96); color: #222; border: 1px solid rgba(255,255,255,0.65); font-weight: 700; }
+    .mapping-header .btn-light:hover { background: #fff; color: var(--theme-color); }
+    .mapping-table-wrap { overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+    .mapping-table { min-width: 860px; margin: 0; color: var(--text-primary); }
+    .mapping-table thead th { background: linear-gradient(135deg, var(--theme-color), var(--theme-dark)); color: #fff; border: 0; white-space: nowrap; font-weight: 700; padding: 12px 10px; }
+    .mapping-table tbody td { background: var(--card-bg); color: var(--text-primary); border-color: var(--border-color); padding: 11px 10px; overflow-wrap: anywhere; }
+    .mapping-table tbody tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+    .mapping-table tbody tr:hover td { background: var(--hover-color); }
+    .dark-mode .mapping-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.025); }
+    .dark-mode .mapping-header .btn-light { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.22); }
+    .dark-mode .mapping-header .btn-light:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    @media (max-width: 768px) { .mapping-page { padding: 10px; } }
 </style>
 
-<div class="container mt-5">
-    <div class="card shadow-lg rounded-4">
+<div class="mapping-page">
+    <div class="mapping-card">
 
         <!-- HEADER -->
-        <div class="card-header bg-theme text-white d-flex justify-content-between align-items-center">
+        <div class="mapping-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">🔀 Routing Mapping</h4>
             <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addModal">
                 ➕ Add Mapping
@@ -31,10 +48,11 @@
         </div>
 
         <!-- BODY -->
-        <div class="card-body">
+        <div class="mapping-body">
 
-            <table class="table table-striped table-hover text-center align-middle">
-                <thead class="table-dark">
+            <div class="mapping-table-wrap">
+            <table class="table table-hover text-center align-middle mapping-table">
+                <thead>
                     <tr>
                         <th>S.No</th>
                         <th>Rout Name</th>
@@ -57,7 +75,7 @@
                         <td>{{ m.description|default:"—" }}</td>
 
                         <td>
-                            <button class="btn btn-outline-dark btn-sm"
+                            <button class="btn btn-outline-theme btn-sm"
                                 data-bs-toggle="modal"
                                 data-bs-target="#editModal{{ m.map_id }}">
                                 ✏️
@@ -141,6 +159,7 @@
                 </tbody>
 
             </table>
+            </div>
 
         </div>
 
