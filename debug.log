@@ -41099,3 +41099,42 @@ Watching for file changes with StatReloader
 "GET /submit_sm_view HTTP/1.1" 200 99860
 D:\sms_projectV3\sms_projectV3\sms_projectV1\sms_project\sms_app\smpp_dlr_manager.py changed, reloading.
 Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+"GET /summary/ HTTP/1.1" 200 63840
+"GET /summary/ HTTP/1.1" 200 63840
+"GET /summary/?status=&date_from=2026-04-21&date_to=&message_id=&mobile=&user_id= HTTP/1.1" 200 56858
+"GET /dlr-history/ HTTP/1.1" 200 81427
+"GET /dlr-history/ HTTP/1.1" 200 83097
+"GET /dlr-history/ HTTP/1.1" 200 85340
+"GET /dlr-history/ HTTP/1.1" 200 86342
+"GET /dlr-history/ HTTP/1.1" 200 86342
+"GET /dlr-history/ HTTP/1.1" 200 86361
+"GET /setting/ HTTP/1.1" 200 43306
+"GET /dashboard/ HTTP/1.1" 200 42201
+"GET /dlr-history/ HTTP/1.1" 200 86361
+"GET /summary/ HTTP/1.1" 200 63840
+"GET /dashboard/ HTTP/1.1" 200 42201
+"GET /submit_sm_view HTTP/1.1" 200 99860
+"GET /setting/ HTTP/1.1" 200 43306
+"GET /summary/ HTTP/1.1" 200 63840
+"GET /summary/ HTTP/1.1" 200 63840
+"GET /summary/ HTTP/1.1" 200 72051
+"GET /setting/ HTTP/1.1" 200 43306
+"GET /dashboard/ HTTP/1.1" 200 42201
+"GET /submit_sm_view HTTP/1.1" 200 99860
+"GET /groups/ HTTP/1.1" 200 46180
+"GET /summary/ HTTP/1.1" 200 72051
+"GET /summary/ HTTP/1.1" 200 72051
+"GET /submit_sm_view HTTP/1.1" 200 99860
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+"POST /submit_sm_view HTTP/1.1" 200 99833
+"GET /submit_sm_view HTTP/1.1" 200 99860
+"GET /summary/ HTTP/1.1" 200 73364
+"GET /dlr-history/ HTTP/1.1" 200 88804
+"GET /dlr-history/ HTTP/1.1" 200 88804
+"GET /submit_sm_view HTTP/1.1" 200 99860
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+"POST /submit_sm_view HTTP/1.1" 200 99833
+"GET /submit_sm_view HTTP/1.1" 200 99860
+"GET /dlr-history/ HTTP/1.1" 200 90010
+"GET /dlr-history/ HTTP/1.1" 200 90042
