@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SMPP Test</title>
+</head>
+<body>
+  <h1>SMPP Connection Test</h1>
+
+  <h2>Bind Connection</h2>
+  <form method="post" action="/smpptr/3/bind/">
+    {% csrf_token %}
+    <button type="submit">Bind SMPP Connection #3</button>
+  </form>
+
+  <h2>Send Message</h2>
+  <form method="post" action="/smpp/3/send/">
+    {% csrf_token %}
+    <button type="submit">Send Hardcoded Message</button>
+  </form>
+</body>
+</html>

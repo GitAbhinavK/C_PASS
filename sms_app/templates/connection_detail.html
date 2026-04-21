@@ -1,0 +1,64 @@
+<!-- app/templates/smpp/connection_detail.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SMPP Connection</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { border: 1px solid #ddd; padding: 12px; border-radius: 6px; }
+    .row { margin-bottom: 8px; }
+    .label { font-weight: bold; }
+    .ok { color: green; }
+    .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Connection details</h2>
+
+  <div class="grid">
+    <div class="card">
+      <div class="row"><span class="label">Name:</span> {{ conn.connect_name }}</div>
+      <div class="row"><span class="label">SMPP ID:</span> {{ conn.smpp_id }}</div>
+      <div class="row"><span class="label">Bind type:</span> {{ conn.bind_type|default:conn.connection_mode }}</div>
+      <div class="row"><span class="label">IP:</span> {{ conn.ip }}</div>
+      <div class="row"><span class="label">TX/TRX port:</span> {{ conn.tr_trx_port }}</div>
+      <div class="row"><span class="label">RX port:</span> {{ conn.rx_port }}</div>
+      <div class="row"><span class="label">Keepalive interval:</span> {{ conn.keepalive_interval }}s</div>
+      <div class="row"><span class="label">Bind status:</span>
+        {% if conn.bind_status == "BOUND" %}
+          <span class="ok">{{ conn.bind_status }}</span>
+        {% else %}
+          <span class="fail">{{ conn.bind_status }}</span>
+        {% endif %}
+      </div>
+      <div class="row"><span class="label">Alive:</span> {{ conn.is_alive }}</div>
+      <div class="row"><span class="label">Uptime:</span> {{ conn.uptime_seconds }}s</div>
+      <div class="row"><span class="label">Last bind time:</span> {{ conn.last_bind_time }}</div>
+      <div class="row"><span class="label">Last enquire_link:</span> {{ conn.last_enquire_link_time }}</div>
+      <div class="row"><span class="label">Last error:</span> {{ conn.last_error|default:"-" }}</div>
+    </div>
+
+    <div class="card">
+      <div class="row"><span class="label">DLT enabled:</span> {{ conn.dlt_enable }}</div>
+      <div class="row"><span class="label">Entity tag:</span> {{ conn.dlt_entity_id_tag }}</div>
+      <div class="row"><span class="label">Template tag:</span> {{ conn.dlt_template_id_tag }}</div>
+      <div class="row"><span class="label">Telemarketer tag:</span> {{ conn.dlt_telemarketer_id_tag }}</div>
+      <div class="row"><span class="label">Behaviour:</span> {{ conn.dlt_telemarketer_tag_behaviour|default:"do_nothing" }}</div>
+    </div>
+  </div>
+
+  <h3>Actions</h3>
+  <form method="post" action="{% url 'smpp_bind_start' smpp_id=conn.smpp_id %}">
+    {% csrf_token %}
+    <button type="submit">Bind & keep alive</button>
+  </form>
+
+  <form method="post" action="{% url 'smpp_bind_stop' smpp_id=conn.smpp_id %}" style="margin-top:10px;">
+    {% csrf_token %}
+    <button type="submit">Unbind</button>
+  </form>
+
+  <p>Check terminal for detailed structured logs: bind type, session open/uptime, alive ticks, DLT config.</p>
+</body>
+</html>

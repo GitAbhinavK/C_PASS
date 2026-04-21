@@ -1,0 +1,605 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Wallet Management{% endblock %}
+
+{% block content %}
+<style>
+    /* Theme color definition */
+    :root {
+        --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+    }
+    .bg-theme { background-color: var(--theme-color) !important; }
+    .text-theme { color: var(--theme-color) !important; }
+    .btn-theme { 
+        background-color: var(--theme-color); 
+        color: #fff; 
+        border: none; 
+    }
+    .btn-theme:hover { 
+        background-color: var(--theme-color); 
+        opacity: 0.9; 
+        color: #fff; 
+    }
+    
+    /* Outline button */
+    .btn-outline-theme {
+        color: var(--theme-color);
+        border-color: var(--theme-color);
+        transition: all 0.2s;
+    }
+    .btn-outline-theme:hover {
+        background-color: var(--theme-color);
+        color: #fff;
+    }
+    
+    /* Table styling */
+    .table-container {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .active-badge {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+        border: 1px solid #28a745;
+    }
+    
+    .inactive-badge {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+    
+    .balance-high {
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    .balance-low {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    .balance-medium {
+        color: #fd7e14;
+        font-weight: 600;
+    }
+    
+    .action-btns {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .wallet-card {
+        border-left: 4px solid var(--theme-color);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, var(--theme-color), #ff8c42);
+        color: white;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-theme text-white d-flex justify-content-between align-items-center rounded-top-4">
+                    <h4 class="mb-0">
+                        <i class="fas fa-wallet me-2"></i> Wallet Management
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addWalletModal">
+                            <i class="fas fa-plus-circle me-1"></i> Add Wallet
+                        </button>
+                        <button class="btn btn-outline-light btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addCreditModal">
+                            <i class="fas fa-coins me-1"></i> Add Credit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 bg-white">
+                    {% if messages %}
+                        <div class="mb-3">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card wallet-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Total Wallets</h6>
+                                    <h3 class="card-title text-theme">{{ total_wallets }}</h3>
+                                    <p class="card-text small">Active: {{ active_wallets }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card wallet-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Total Balance</h6>
+                                    <h3 class="card-title text-theme">₹{{ total_balance|floatformat:2 }}</h3>
+                                    <p class="card-text small">Across all wallets</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card wallet-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Prepaid Wallets</h6>
+                                    <h3 class="card-title text-theme">{{ prepaid_wallets }}</h3>
+                                    <p class="card-text small">Balance: ₹{{ prepaid_balance|floatformat:2 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card wallet-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Postpaid Wallets</h6>
+                                    <h3 class="card-title text-theme">{{ postpaid_wallets }}</h3>
+                                    <p class="card-text small">Credit Limit: ₹{{ total_credit_limit|floatformat:2 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Table -->
+                    <div class="table-container">
+                        <table class="table table-striped table-hover align-middle caption-top">
+                            <caption>Total Wallets: <strong>{{ wallets|length }}</strong></caption>
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Company</th>
+                                    <th>Plan Type</th>
+                                    <th>Deduction Type</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Created Date</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wallet in wallets %}
+                                <tr>
+                                    <td>{{ wallet.wallet_id }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-user-circle text-theme"></i>
+                                            </div>
+                                            <div>
+                                                <strong>{{ wallet.user.username }}</strong><br>
+                                                <small class="text-muted">{{ wallet.user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ wallet.company.name }}</td>
+                                    <td>
+                                        <span class="badge {% if wallet.plan_type == 'Prepaid' %}bg-primary{% else %}bg-warning{% endif %}">
+                                            {{ wallet.plan_type }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ wallet.deduction_type }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="{% if wallet.balance > 1000 %}balance-high{% elif wallet.balance < 100 %}balance-low{% else %}balance-medium{% endif %}">
+                                            ₹{{ wallet.balance|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if wallet.attributes_1 == 'ACTIVE' %}
+                                            <span class="status-badge active-badge">Active</span>
+                                        {% else %}
+                                            <span class="status-badge inactive-badge">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ wallet.created_date|date:"d M Y" }}</td>
+                                    <td>{{ wallet.last_updated_date|date:"d M Y H:i" }}</td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn btn-outline-theme btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editWalletModal{{ wallet.wallet_id }}"
+                                                    title="Edit Wallet">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#viewTransactionsModal{{ wallet.wallet_id }}"
+                                                    title="View Transactions">
+                                                <i class="fas fa-history"></i>
+                                            </button>
+                                            <a href="{% url 'wallet_transactions' wallet.wallet_id %}" 
+                                               class="btn btn-outline-success btn-sm"
+                                               title="Transaction History">
+                                                <i class="fas fa-list"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Edit Wallet Modal -->
+                                <div class="modal fade" id="editWalletModal{{ wallet.wallet_id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content rounded-4 shadow-lg">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-edit me-2"></i> Edit Wallet - {{ wallet.user.username }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{% url 'edit_wallet' wallet.wallet_id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">User</label>
+                                                                <input type="text" class="form-control" value="{{ wallet.user.username }}" readonly>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Company</label>
+                                                                <input type="text" class="form-control" value="{{ wallet.company.name }}" readonly>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Plan Type</label>
+                                                                <select name="plan_type" class="form-select" required>
+                                                                    <option value="Prepaid" {% if wallet.plan_type == 'Prepaid' %}selected{% endif %}>Prepaid</option>
+                                                                    <option value="Postpaid" {% if wallet.plan_type == 'Postpaid' %}selected{% endif %}>Postpaid</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Deduction Type</label>
+                                                                <select name="deduction_type" class="form-select" required>
+                                                                    <option value="SMS" {% if wallet.deduction_type == 'SMS' %}selected{% endif %}>SMS</option>
+                                                                    <option value="Email" {% if wallet.deduction_type == 'Email' %}selected{% endif %}>Email</option>
+                                                                    <option value="Voice" {% if wallet.deduction_type == 'Voice' %}selected{% endif %}>Voice</option>
+                                                                    <option value="Other" {% if wallet.deduction_type == 'Other' %}selected{% endif %}>Other</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Balance</label>
+                                                                <input type="number" name="balance" class="form-control" 
+                                                                       value="{{ wallet.balance|floatformat:2 }}" step="0.01" min="0" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Status</label>
+                                                                <select name="status" class="form-select" required>
+                                                                    <option value="ACTIVE" {% if wallet.attributes_1 == 'ACTIVE' %}selected{% endif %}>Active</option>
+                                                                    <option value="INACTIVE" {% if wallet.attributes_1 == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                                                                    <option value="SUSPENDED" {% if wallet.attributes_1 == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Credit Limit (for Postpaid)</label>
+                                                                <input type="number" name="credit_limit" class="form-control" 
+                                                                       value="{{ wallet.attributes_2|default:0 }}" step="0.01" min="0">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Rate per SMS</label>
+                                                                <input type="number" name="rate_per_sms" class="form-control" 
+                                                                       value="{{ wallet.attributes_3|default:'0.10' }}" step="0.0001" min="0">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="fas fa-save me-1"></i> Update Wallet
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                        <i class="fas fa-times me-1"></i> Cancel
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- View Transactions Modal -->
+                                <div class="modal fade" id="viewTransactionsModal{{ wallet.wallet_id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content rounded-4 shadow-lg">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-history me-2"></i> Recent Transactions - {{ wallet.user.username }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Date</th>
+                                                                <th>Type</th>
+                                                                <th>Reference ID</th>
+                                                                <th>Amount</th>
+                                                                <th>Ending Balance</th>
+                                                                <th>Comments</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for txn in wallet.transactions.all|slice:":10" %}
+                                                            <tr>
+                                                                <td>{{ txn.created_date|date:"d M Y H:i" }}</td>
+                                                                <td>
+                                                                    <span class="badge {% if txn.action_type == 'Credit' %}bg-success{% else %}bg-danger{% endif %}">
+                                                                        {{ txn.action_type }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{{ txn.reference_id|default:"-" }}</td>
+                                                                <td class="{% if txn.action_type == 'Credit' %}text-success{% else %}text-danger{% endif %}">
+                                                                    ₹{{ txn.amount|floatformat:2 }}
+                                                                </td>
+                                                                <td>₹{{ txn.ending_balance|floatformat:2 }}</td>
+                                                                <td>{{ txn.comments|truncatechars:30 }}</td>
+                                                            </tr>
+                                                            {% empty %}
+                                                            <tr>
+                                                                <td colspan="6" class="text-center text-muted py-4">
+                                                                    No transactions found
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <a href="{% url 'wallet_transactions' wallet.wallet_id %}" class="btn btn-theme">
+                                                    <i class="fas fa-external-link-alt me-1"></i> View All Transactions
+                                                </a>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Wallet Modal -->
+<div class="modal fade" id="addWalletModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i> Create New Wallet
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_wallet' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Select User *</label>
+                                <select name="user_id" class="form-select" required id="userSelect">
+                                    <option value="">-- Select User --</option>
+                                    {% for user in admin_users %}
+                                    <option value="{{ user.user_id }}">{{ user.username }} ({{ user.email }}) - {{ user.company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Company</label>
+                                <input type="text" class="form-control" id="companyDisplay" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Plan Type *</label>
+                                <select name="plan_type" class="form-select" required>
+                                    <option value="Prepaid">Prepaid</option>
+                                    <option value="Postpaid">Postpaid</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Deduction Type *</label>
+                                <select name="deduction_type" class="form-select" required>
+                                    <option value="SMS">SMS</option>
+                                    <option value="Email">Email</option>
+                                    <option value="Voice">Voice</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Initial Balance</label>
+                                <input type="number" name="initial_balance" class="form-control" value="0" step="0.01" min="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Credit Limit (for Postpaid)</label>
+                                <input type="number" name="credit_limit" class="form-control" value="0" step="0.01" min="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Rate per SMS</label>
+                                <input type="number" name="rate_per_sms" class="form-control" value="0.10" step="0.0001" min="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Status</label>
+                                <select name="status" class="form-select" required>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Created By</label>
+                                <input type="text" name="create_by" class="form-control" value="{{ request.user.username }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-theme">
+                        <i class="fas fa-check-circle me-1"></i> Create Wallet
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Credit/Debit Modal -->
+<div class="modal fade" id="addCreditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-coins me-2"></i> Add Credit/Debit Transaction
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_credit_transaction' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Select Wallet *</label>
+                                <select name="wallet_id" class="form-select" required id="walletSelect">
+                                    <option value="">-- Select Wallet --</option>
+                                    {% for wallet in wallets %}
+                                    <option value="{{ wallet.wallet_id }}">
+                                        {{ wallet.user.username }} - {{ wallet.company.name }} (₹{{ wallet.balance|floatformat:2 }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Transaction Type *</label>
+                                <select name="action_type" class="form-select" required id="actionType">
+                                    <option value="Credit">Credit (Add Money)</option>
+                                    <option value="Debit">Debit (Deduct Money)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Amount *</label>
+                                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Reference ID</label>
+                                <input type="text" name="reference_id" class="form-control" placeholder="Payment ID, Invoice No, etc.">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Used Credits</label>
+                                <input type="number" name="used_credit" class="form-control" step="1" min="0" value="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Comments</label>
+                                <textarea name="comments" class="form-control" rows="3" placeholder="Transaction description..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Created By</label>
+                                <input type="text" name="create_by" class="form-control" value="{{ request.user.username }}">
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Note:</strong> This will create a transaction in Credit table and update the Wallet balance automatically.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check-circle me-1"></i> Process Transaction
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update company display when user is selected
+    document.addEventListener('DOMContentLoaded', function() {
+        const userSelect = document.getElementById('userSelect');
+        const companyDisplay = document.getElementById('companyDisplay');
+        const userData = {
+            {% for user in admin_users %}
+                "{{ user.user_id }}": "{{ user.company.name }}",
+            {% endfor %}
+        };
+        
+        if (userSelect && companyDisplay) {
+            userSelect.addEventListener('change', function() {
+                const userId = this.value;
+                companyDisplay.value = userData[userId] || '';
+            });
+        }
+        
+        // Wallet balance validation for debit
+        const walletSelect = document.getElementById('walletSelect');
+        const actionType = document.getElementById('actionType');
+        const amountInput = document.querySelector('input[name="amount"]');
+        
+        if (walletSelect) {
+            const walletData = {
+                {% for wallet in wallets %}
+                    "{{ wallet.wallet_id }}": {
+                        "balance": {{ wallet.balance }},
+                        "user": "{{ wallet.user.username }}"
+                    },
+                {% endfor %}
+            };
+            
+            actionType.addEventListener('change', validateAmount);
+            amountInput.addEventListener('input', validateAmount);
+            
+            function validateAmount() {
+                const walletId = walletSelect.value;
+                const action = actionType.value;
+                const amount = parseFloat(amountInput.value) || 0;
+                
+                if (walletId && action === 'Debit') {
+                    const wallet = walletData[walletId];
+                    if (wallet && amount > wallet.balance) {
+                        amountInput.setCustomValidity(`Insufficient balance! Available: ₹${wallet.balance}`);
+                        amountInput.reportValidity();
+                    } else {
+                        amountInput.setCustomValidity('');
+                    }
+                } else {
+                    amountInput.setCustomValidity('');
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

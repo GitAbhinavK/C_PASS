@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Routing Mapping{% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+    }
+    .bg-theme { background-color: var(--theme-color) !important; }
+    .text-theme { color: var(--theme-color) !important; }
+    .btn-theme { background-color: var(--theme-color) !important; color: #fff !important; border: none; }
+    .btn-theme:hover { opacity: 0.9; }
+
+    .card {
+        border-radius: 14px;
+        box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 14px;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow-lg rounded-4">
+
+        <!-- HEADER -->
+        <div class="card-header bg-theme text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">🔀 Routing Mapping</h4>
+            <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addModal">
+                ➕ Add Mapping
+            </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body">
+
+            <table class="table table-striped table-hover text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Rout Name</th>
+                        <th>Routing</th>
+                        {% comment %} <th>SMPP</th> {% endcomment %}
+                        <th>User</th>
+                        <th>Description</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for m in mappings %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ m.rout_name }}</td>
+                        <td>{{ m.routing.name }}</td>
+                        {% comment %} <td>{{ m.smpp.connect_name }}</td> {% endcomment %}
+                        <td>{{ m.user.username }}</td>
+                        <td>{{ m.description|default:"—" }}</td>
+
+                        <td>
+                            <button class="btn btn-outline-dark btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal{{ m.map_id }}">
+                                ✏️
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Modal -->
+                    <div class="modal fade" id="editModal{{ m.map_id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content rounded-4">
+
+                                <div class="modal-header bg-warning text-dark">
+                                    <h5 class="modal-title">✏️ Edit Mapping - {{ m.rout_name }}</h5>
+                                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <form method="POST" action="{% url 'edit_routing_mapping' m.map_id %}">
+                                    {% csrf_token %}
+
+                                    <div class="modal-body">
+                                        <div class="row">
+
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Rout Name</label>
+                                                <input type="text" name="rout_name" value="{{ m.rout_name }}" class="form-control">
+                                            </div>
+
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Routing</label>
+                                                <select name="routing_id" class="form-control">
+                                                    {% for r in routings %}
+                                                    <option value="{{ r.rout_id }}" {% if m.routing.rout_id == r.rout_id %}selected{% endif %}>
+                                                        {{ r.name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            {% comment %} <div class="col-md-4 mb-3">
+                                                <label class="form-label">SMPP</label>
+                                                <select name="smpp_id" class="form-control">
+                                                    {% for s in smpp_list %}
+                                                    <option value="{{ s.id }}" {% if m.smpp.id == s.id %}selected{% endif %}>
+                                                        {{ s.connect_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div> {% endcomment %}
+
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">User</label>
+                                                <select name="user_id" class="form-control">
+                                                    {% for u in users %}
+                                                    <option value="{{ u.id }}" {% if m.user.id == u.id %}selected{% endif %}>
+                                                        {{ u.username }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea name="description" class="form-control" rows="2">{{ m.description }}</textarea>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button class="btn btn-success">💾 Update</button>
+                                        <button class="btn btn-secondary" data-bs-dismiss="modal">❌ Close</button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+
+                {% endfor %}
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Add Mapping Modal -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+
+            <div class="modal-header bg-theme text-white">
+                <h5 class="modal-title">➕ Add New Routing Mapping</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" action="{% url 'add_routing_mapping' %}">
+                {% csrf_token %}
+
+                <div class="modal-body">
+                    <div class="row">
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Rout Name</label>
+                            <input type="text" name="rout_name" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Routing</label>
+                            <select name="routing_id" class="form-control">
+                                {% for r in routings %}
+                                <option value="{{ r.rout_id }}">{{ r.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% comment %} <div class="col-md-4 mb-3">
+                            <label class="form-label">SMPP</label>
+                            <select name="smpp_id" class="form-control">
+                                {% for s in smpp_list %}
+                                <option value="{{ s.smpp_id }}">{{ s.connect_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div> {% endcomment %}
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">User</label>
+                            <select name="user_id" class="form-control">
+                                {% for u in users %}
+                                <option value="{{ u.user_id }}">{{ u.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control"></textarea>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-theme">✅ Save</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

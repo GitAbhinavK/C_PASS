@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% block title %}DLR History{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px; font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 1600px; margin: 0 auto;">
+
+  <!-- ===== HEADER BAR ===== -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+    <div>
+      <h2 style="color: #ff6600; font-size: 24px; font-weight: 600; margin: 0;">📄 DLR History Report</h2>
+      <p style="color: #666; margin: 5px 0 0; font-size: 14px;">Total Records: <strong>{{ total_count }}</strong> | Showing last 500</p>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <div style="display: flex; gap: 5px;">
+        <span style="background: #28a745; color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px;">Delivered: {{ delivered_count }}</span>
+        <span style="background: #dc3545; color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px;">Failed: {{ failed_count }}</span>
+        <span style="background: #ffc107; color: black; padding: 4px 10px; border-radius: 20px; font-size: 13px;">Pending: {{ pending_count }}</span>
+      </div>
+      <button id="downloadCSV" 
+              style="background-color: #ff6600; color: white; border: none; padding: 8px 16px; 
+                     border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;
+                     box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s;
+                     display: flex; align-items: center; gap: 5px;">
+        <span>⬇️</span> Download CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== FILTER SECTION ===== -->
+  <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+    <form method="GET" action="" id="filterForm">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px;">
+        <!-- Status Filter -->
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">Status</label>
+          <select name="status" style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="">All Status</option>
+            <option value="DELIVERED" {% if filters.status == 'DELIVERED' %}selected{% endif %}>✅ Delivered</option>
+            <option value="FAILED" {% if filters.status == 'FAILED' %}selected{% endif %}>❌ Failed</option>
+            <option value="PENDING" {% if filters.status == 'PENDING' %}selected{% endif %}>⏳ Pending</option>
+            <option value="SUBMITTED" {% if filters.status == 'SUBMITTED' %}selected{% endif %}>📤 Submitted</option>
+            {% for status in status_choices %}
+              {% if status not in 'DELIVRD,DELIVERED,UNDELIV,UNDELIVERED,FAILED,REJECTED,EXPIRED,PENDING,ENROUTE,SUBMITTED,SENT' %}
+                <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Date Range -->
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">Date From</label>
+          <input type="date" name="date_from" value="{{ filters.date_from }}" 
+                 style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+        </div>
+        
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">Date To</label>
+          <input type="date" name="date_to" value="{{ filters.date_to }}"
+                 style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+        </div>
+
+        <!-- Message ID -->
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">Message ID</label>
+          <input type="text" name="message_id" placeholder="Search Message ID" value="{{ filters.message_id }}"
+                 style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+        </div>
+
+        <!-- Mobile Number -->
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">Mobile Number</label>
+          <input type="text" name="mobile" placeholder="Enter Mobile" value="{{ filters.mobile }}"
+                 style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+        </div>
+
+        <!-- TMID -->
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">TMID</label>
+          <input type="text" name="tmid" placeholder="TMID" value="{{ filters.tmid }}"
+                 style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+        </div>
+
+        <!-- SMSC -->
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">SMSC</label>
+          <select name="smsc" style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="">All SMSC</option>
+            {% for smsc in smsc_choices %}
+              <option value="{{ smsc }}" {% if filters.smsc == smsc %}selected{% endif %}>{{ smsc }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Account -->
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 13px;">Account</label>
+          <select name="account" style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="">All Accounts</option>
+            {% for account in account_choices %}
+              <option value="{{ account }}" {% if filters.account == account %}selected{% endif %}>{{ account }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Filter Actions -->
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+          <button type="submit" 
+                  style="background: #ff6600; color: white; border: none; padding: 8px 20px; 
+                         border-radius: 6px; cursor: pointer; font-weight: 500;">
+            Apply Filters
+          </button>
+          <a href="{% url 'dlr_history' %}" 
+             style="background: #6c757d; color: white; text-decoration: none; padding: 8px 20px; 
+                    border-radius: 6px; display: inline-block; font-weight: 500;">
+            Reset
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===== SEARCH BAR ===== -->
+  <div style="margin-bottom: 15px;">
+    <input type="text" id="searchInput" placeholder="🔍 Search in table (Message ID, Mobile, Status, etc...)" class="form-control">
+  </div>
+
+  <!-- ===== TABLE WRAPPER ===== -->
+  <div class="data-table-container">
+    <table class="data-table" id="dlrTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Msg ID</th>
+          <th>Mobile</th>
+          <th>Message</th>
+          <th>Status</th>
+          <th>Reason</th>
+          <th>TMID</th>
+          <th>SMSC</th>
+          <th>Account</th>
+          <th>Entity ID</th>
+          <th>Content ID</th>
+          <th>Enc</th>
+          <th>Parts</th>
+          <th>Submit Time</th>
+          <th>DLR Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+        <tr>
+          <td data-label="#"> {{ forloop.counter }}</td>
+          <td data-label="Msg ID" title="{{ line.message_id }}">{{ line.message_id|default:"-"|truncatechars:12 }}</td>
+          <td data-label="Mobile">{{ line.receiver|default:line.mobile_number|default:"-" }}</td>
+          <td data-label="Message" title="{{ line.content|default:line.text_mes }}">
+            {{ line.content|default:line.text_mes|default:"-"|truncatechars:30 }}
+          </td>
+          <td data-label="Status">
+            {% with status=line.status|upper %}
+                {% if 'DELIV' in status %}
+                  <span class="status-badge status-delivered">Delivered</span>
+                {% elif 'FAIL' in status or 'UNDELIV' in status or 'REJECT' in status %}
+                  <span class="status-badge status-failed">Failed</span>
+                {% elif 'PENDING' in status or 'ENROUTE' in status %}
+                  <span class="status-badge status-pending">Pending</span>
+                {% else %}
+                  <span class="status-badge status-unknown">{{ status|default:"Unknown" }}</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td data-label="Reason" title="{{ line.reason|default:line.masked_reason }}">
+            {{ line.reason|default:line.masked_reason|default:"-"|truncatechars:20 }}
+          </td>
+          <td data-label="TMID">{{ line.tmid|default:"-"|truncatechars:10 }}</td>
+          <td data-label="SMSC">{{ line.smsc|default:"-" }}</td>
+          <td data-label="Account">{{ line.account|default:"-" }}</td>
+          <td data-label="Entity ID">{{ line.entity_id|default:"-" }}</td>
+          <td data-label="Content ID">{{ line.content_id|default:"-"|truncatechars:8 }}</td>
+          <td data-label="Enc">{{ line.encoding|default:"-" }}</td>
+          <td data-label="Parts">{{ line.parts|default:"1" }}</td>
+          <td data-label="Submit Time">{{ line.submit_time|date:"Y-m-d H:i:s"|default:"-" }}</td>
+          <td data-label="DLR Time">{{ line.dlr_time|date:"Y-m-d H:i:s"|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="15" style="text-align:center; padding:30px; color:#999;">
+            <span style="font-size: 16px;">📭 No DLR records found</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- ===== FOOTER INFO ===== -->
+    <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; color: var(--text-secondary); font-size: 13px;">
+    <span>Showing {{ lines|length }} of {{ total_count }} records</span>
+    <span>Last updated: {% now "Y-m-d H:i:s" %}</span>
+</div>
+
+<!-- ===== FUNCTIONALITY: SEARCH & DOWNLOAD ===== -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('dlrTable');
+    const tableRows = document.querySelectorAll('#dlrTable tbody tr');
+    
+    // Counter for visible rows
+    function updateVisibleCount() {
+      let visibleCount = 0;
+      tableRows.forEach(row => {
+        if (row.style.display !== 'none') visibleCount++;
+      });
+      
+      // Update or create counter element
+      let counter = document.getElementById('visibleCount');
+      if (!counter) {
+        counter = document.createElement('span');
+        counter.id = 'visibleCount';
+        counter.style.marginLeft = '10px';
+        counter.style.color = '#666';
+        document.querySelector('.filter-actions')?.appendChild(counter);
+      }
+      counter.textContent = `Showing ${visibleCount} records`;
+    }
+
+    // 🔍 Live search
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const filter = this.value.toLowerCase().trim();
+        
+        tableRows.forEach(row => {
+          let found = false;
+          const cells = row.getElementsByTagName('td');
+          
+          for (let cell of cells) {
+            const text = cell.textContent || cell.innerText;
+            if (text.toLowerCase().includes(filter)) {
+              found = true;
+              break;
+            }
+          }
+          
+          row.style.display = found ? '' : 'none';
+        });
+        
+        updateVisibleCount();
+      });
+    }
+
+    // 💾 CSV download with filters
+    document.getElementById('downloadCSV').addEventListener('click', function() {
+      // Get current filter parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const filterSummary = [];
+      
+      for (let [key, value] of urlParams.entries()) {
+        if (value) filterSummary.push(`${key}: ${value}`);
+      }
+      
+      const headers = [];
+      const rows = [];
+      
+      // Get headers from thead
+      const headerCells = document.querySelectorAll('#dlrTable thead th');
+      headerCells.forEach(th => {
+        headers.push(th.textContent.trim());
+      });
+      
+      // Add filter info header
+      rows.push(['Report generated on: ' + new Date().toLocaleString()]);
+      if (filterSummary.length > 0) {
+        rows.push(['Filters: ' + filterSummary.join(' | ')]);
+      }
+      rows.push([]); // Empty row for spacing
+      rows.push(headers);
+      
+      // Get data from visible rows only
+      tableRows.forEach(row => {
+        if (row.style.display !== 'none') {
+          const rowData = [];
+          const cells = row.querySelectorAll('td');
+          
+          cells.forEach(cell => {
+            // Clean the text content
+            let text = cell.textContent || cell.innerText;
+            text = text.replace(/\s+/g, ' ').trim();
+            // Remove status emojis if present
+            text = text.replace(/[✅❌⏳❓]/g, '').trim();
+            rowData.push(`"${text}"`);
+          });
+          
+          rows.push(rowData);
+        }
+      });
+      
+      // Add summary at the end
+      rows.push([]);
+      rows.push([`Total records: ${tableRows.length}, Visible: ${document.querySelectorAll('#dlrTable tbody tr:not([style*="display: none"])').length}`]);
+      
+      // Convert to CSV
+      const csvContent = rows.map(row => row.join(',')).join('\n');
+      
+      // Download
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); // Add BOM for Excel
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `DLR_History_${new Date().toISOString().slice(0,10)}.csv`);
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+  });
+</script>
+
+{% endblock %}

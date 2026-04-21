@@ -1,0 +1,519 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if hash %}Edit{% else %}Create{% endif %} SMPP Hash</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        .popup-form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .readonly-field {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="card popup-form">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{% if hash %}Edit{% else %}Create{% endif %} SMPP Hash</h4>
+                {% if hash %}
+                <button id="editBtn" class="btn btn-primary">Edit</button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <form id="hashForm" method="post" action="{% if hash %}{% url 'edit_hash' hash.hash_id %}{% else %}{% url 'create_hash' %}{% endif %}">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- User Field - LOV Dropdown -->
+                        <div class="col-md-6 form-group">
+                            <label for="user" class="form-label">User *</label>
+                            <select name="user" id="user" class="form-control" 
+                                    {% if hash %}data-selected="{{ hash.user.user_id }}"{% endif %}
+                                    required {% if hash and not editable %}readonly{% endif %}>
+                                <option value="">Select User</option>
+                                <!-- Options will be loaded via AJAX -->
+                            </select>
+                            <small class="form-text text-muted">Select user from your organization</small>
+                        </div>
+
+                        <!-- Sender Field - NOT DISABLED, just shows message -->
+                        <div class="col-md-6 form-group">
+                            <label for="sender" class="form-label">Sender *</label>
+                            <select name="sender" id="sender" class="form-control" 
+                                    {% if hash %}data-selected="{{ hash.sender.sender_id }}"{% endif %}
+                                    required {% if hash and not editable %}readonly{% endif %}>
+                                <option value="">-- Please select a User first --</option>
+                            </select>
+                            <small class="form-text text-muted">PE ID will be auto-filled when sender is selected</small>
+                        </div>
+
+                        <!-- PE ID (Auto-filled from Sender) -->
+                        <div class="col-md-6 form-group">
+                            <label for="pe_id" class="form-label">PE ID</label>
+                            <input type="text" name="pe_id" id="pe_id" 
+                                   class="form-control readonly-field" 
+                                   readonly {% if hash and not editable %}disabled{% endif %}>
+                        </div>
+
+                        <!-- SMPP Connection Field -->
+                        <div class="col-md-6 form-group">
+                            <label for="connection" class="form-label">SMPP Connection *</label>
+                            <select name="connection" id="connection" class="form-control" 
+                                    {% if hash %}data-selected="{{ hash.connection.smpp_id }}"{% endif %}
+                                    required {% if hash and not editable %}readonly{% endif %}>
+                                <option value="">Select SMPP Connection</option>
+                            </select>
+                            <small class="form-text text-muted">TM ID will be auto-filled</small>
+                        </div>
+
+                        <!-- TM ID (Auto-filled from SMPP Connection) -->
+                        <div class="col-md-6 form-group">
+                            <label for="tmid" class="form-label">TM ID</label>
+                            <input type="text" name="tmid" id="tmid" 
+                                   class="form-control readonly-field" 
+                                   readonly {% if hash and not editable %}disabled{% endif %}>
+                        </div>
+
+                        <!-- Type Field -->
+                        <div class="col-md-6 form-group">
+                            <label for="type" class="form-label">Type *</label>
+                            <select name="type" id="type" class="form-control" 
+                                    required {% if hash and not editable %}readonly{% endif %}>
+                                <option value="">Select Type</option>
+                                <option value="ON" {% if hash.type == 'ON' %}selected{% endif %}>ON</option>
+                                <option value="OFF" {% if hash.type == 'OFF' %}selected{% endif %}>OFF</option>
+                                <option value="HASH" {% if hash.type == 'HASH' %}selected{% endif %}>HASH</option>
+                                <option value="PACKET_TM" {% if hash.type == 'PACKET_TM' %}selected{% endif %}>PACKET_TM</option>
+                            </select>
+                        </div>
+
+                        <!-- Hash Value Field (Conditional) -->
+                        <div class="col-md-12 form-group" id="hashValueGroup" style="display: none;">
+                            <label for="hash_value" class="form-label">Hash Value *</label>
+                            <input type="text" name="hash_value" id="hash_value" 
+                                   class="form-control" 
+                                   {% if hash and not editable %}readonly{% endif %}>
+                            <small class="form-text text-muted" id="hashHelp"></small>
+                        </div>
+
+                        <!-- Date Fields -->
+                        <div class="col-md-6 form-group">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" name="start_date" id="start_date" 
+                                   class="form-control" 
+                                   value="{% if hash %}{{ hash.start_date|date:'Y-m-d' }}{% endif %}"
+                                   {% if hash and not editable %}readonly{% endif %}>
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" name="end_date" id="end_date" 
+                                   class="form-control" 
+                                   value="{% if hash %}{{ hash.end_date|date:'Y-m-d' }}{% endif %}"
+                                   {% if hash and not editable %}readonly{% endif %}>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        {% if not hash or editable %}
+                        <button type="submit" class="btn btn-success">Save</button>
+                        {% endif %}
+                        <button type="button" class="btn btn-secondary" onclick="window.close()">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            let isEditMode = {% if hash and not editable %}false{% else %}true{% endif %};
+            
+            // Make form editable when Edit button is clicked
+            {% if hash and not editable %}
+            $('#editBtn').click(function() {
+                $('select, input').prop('disabled', false);
+                $('select, input').prop('readonly', false);
+                $('.readonly-field').prop('readonly', false);
+                $(this).hide();
+                isEditMode = true;
+                // Re-load data if needed
+                if ($('#user').val()) {
+                    loadSenders($('#user').val());
+                }
+            });
+            {% endif %}
+
+            // Fetch users for the current organization
+            function loadUsers() {
+                $.ajax({
+                    url: '{% url "get_users" %}',
+                    type: 'GET',
+                    success: function(data) {
+                        var userSelect = $('#user');
+                        userSelect.empty();
+                        userSelect.append('<option value="">Select User</option>');
+                        
+                        if (data.users && data.users.length > 0) {
+                            data.users.forEach(function(user) {
+                                userSelect.append(
+                                    `<option value="${user.id}">
+                                        ${user.username} - ${user.full_name || ''}
+                                    </option>`
+                                );
+                            });
+                            
+                            // Select previously selected user if editing
+                            var selectedUser = userSelect.data('selected');
+                            if (selectedUser) {
+                                userSelect.val(selectedUser);
+                                // Load senders for this user
+                                loadSenders(selectedUser);
+                            }
+                            
+                            // If creating new, default to current user
+                            {% if not hash %}
+                            userSelect.val('{{ request.user.user_id }}');
+                            // Load senders for current user
+                            loadSenders('{{ request.user.user_id }}');
+                            {% endif %}
+                        } else {
+                            userSelect.append('<option value="" disabled>No users found</option>');
+                        }
+                    },
+                    error: function() {
+                        console.error('Error loading users');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to load users. Please refresh the page.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            }
+
+            // Fetch senders for the selected user
+            function loadSenders(userId) {
+                var senderSelect = $('#sender');
+                
+                if (!userId) {
+                    senderSelect.empty();
+                    senderSelect.append('<option value="">-- Please select a User first --</option>');
+                    return;
+                }
+                
+                // Show loading message
+                senderSelect.empty();
+                senderSelect.append('<option value="">Loading senders...</option>');
+                
+                $.ajax({
+                    url: '{% url "get_senders" %}?user_id=' + userId,
+                    type: 'GET',
+                    success: function(data) {
+                        senderSelect.empty();
+                        
+                        if (data.senders && data.senders.length > 0) {
+                            senderSelect.append('<option value="">Select Sender</option>');
+                            data.senders.forEach(function(sender) {
+                                senderSelect.append(
+                                    `<option value="${sender.id}" data-peid="${sender.peid || ''}">
+                                        ${sender.name} ${sender.peid ? '(PE ID: ' + sender.peid + ')' : ''}
+                                    </option>`
+                                );
+                            });
+                            
+                            // Select previously selected sender if editing
+                            var selectedSender = senderSelect.data('selected');
+                            if (selectedSender) {
+                                senderSelect.val(selectedSender);
+                                updatePeId();
+                            }
+                        } else {
+                            senderSelect.append('<option value="" disabled>No senders found for this user</option>');
+                        }
+                    },
+                    error: function() {
+                        console.error('Error loading senders');
+                        senderSelect.empty();
+                        senderSelect.append('<option value="">Error loading senders. Please try again.</option>');
+                    }
+                });
+            }
+
+            // Fetch SMPP connections
+            function loadConnections() {
+                var connectionSelect = $('#connection');
+                
+                // Show loading message
+                connectionSelect.empty();
+                connectionSelect.append('<option value="">Loading connections...</option>');
+                
+                $.ajax({
+                    url: '{% url "get_connections" %}',
+                    type: 'GET',
+                    success: function(data) {
+                        connectionSelect.empty();
+                        connectionSelect.append('<option value="">Select SMPP Connection</option>');
+                        
+                        if (data.connections && data.connections.length > 0) {
+                            data.connections.forEach(function(conn) {
+                                connectionSelect.append(
+                                    `<option value="${conn.id}" data-tmid="${conn.tmid || ''}">
+                                        ${conn.name} ${conn.tmid ? '(TM ID: ' + conn.tmid + ')' : ''}
+                                    </option>`
+                                );
+                            });
+                            
+                            // Select previously selected connection if editing
+                            var selectedConn = connectionSelect.data('selected');
+                            if (selectedConn) {
+                                connectionSelect.val(selectedConn);
+                                updateTmid();
+                            }
+                        } else {
+                            connectionSelect.append('<option value="" disabled>No SMPP connections found</option>');
+                        }
+                    },
+                    error: function() {
+                        console.error('Error loading connections');
+                        connectionSelect.empty();
+                        connectionSelect.append('<option value="">Error loading connections. Please try again.</option>');
+                    }
+                });
+            }
+
+            // Update PE ID when sender is selected
+            $('#sender').change(function() {
+                updatePeId();
+            });
+
+            function updatePeId() {
+                var selectedOption = $('#sender option:selected');
+                var peid = selectedOption.data('peid') || '';
+                $('#pe_id').val(peid);
+                updateHashValue();
+            }
+
+            // Update TM ID when connection is selected
+            $('#connection').change(function() {
+                updateTmid();
+                updateHashValue();
+            });
+
+            function updateTmid() {
+                var selectedOption = $('#connection option:selected');
+                var tmid = selectedOption.data('tmid') || '';
+                $('#tmid').val(tmid);
+            }
+
+            // Handle user change - load senders for selected user
+            $('#user').change(function() {
+                var userId = $(this).val();
+                if (userId) {
+                    loadSenders(userId);
+                    // Clear PE ID when user changes
+                    $('#pe_id').val('');
+                } else {
+                    $('#sender').empty().append('<option value="">-- Please select a User first --</option>');
+                    $('#pe_id').val('');
+                }
+            });
+
+            // Handle type change
+            $('#type').change(function() {
+                updateHashValue();
+            });
+
+            // Update hash value based on type
+            function updateHashValue() {
+                var type = $('#type').val();
+                var peid = $('#pe_id').val();
+                var tmid = $('#tmid').val();
+                var hashValueGroup = $('#hashValueGroup');
+                var hashValueInput = $('#hash_value');
+                var hashHelp = $('#hashHelp');
+
+                hashValueGroup.hide();
+                hashValueInput.prop('required', false);
+
+                if (!type) {
+                    return;
+                }
+
+                switch(type) {
+                    case 'ON':
+                        hashValueGroup.show();
+                        hashValueInput.val(tmid);
+                        hashValueInput.prop('required', true);
+                        hashHelp.text('TM ID will be used as hash value');
+                        break;
+                        
+                    case 'OFF':
+                        hashValueGroup.show();
+                        hashValueInput.val('');
+                        hashValueInput.prop('required', false);
+                        hashHelp.text('Leave blank for OFF type');
+                        break;
+                        
+                    case 'HASH':
+                        hashValueGroup.show();
+                        if (peid && tmid) {
+                            // Create hash from PE ID and TM ID
+                            var hash = createHash(peid + tmid);
+                            hashValueInput.val(hash);
+                            hashHelp.text('Hash created from PE ID + TM ID');
+                        } else {
+                            hashValueInput.val('');
+                            hashHelp.text('Select both Sender and Connection to generate hash');
+                        }
+                        hashValueInput.prop('required', true);
+                        break;
+                        
+                    case 'PACKET_TM':
+                        hashValueGroup.show();
+                        if (tmid && peid) {
+                            hashValueInput.val(tmid + peid);
+                            hashHelp.text('TM ID + PE ID combination');
+                        } else {
+                            hashValueInput.val('');
+                            hashHelp.text('Select both Sender and Connection to generate value');
+                        }
+                        hashValueInput.prop('required', true);
+                        break;
+                }
+            }
+
+            // Simple hash function
+            function createHash(str) {
+                if (!str) return '';
+                var hash = 0;
+                for (var i = 0; i < str.length; i++) {
+                    var char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32bit integer
+                }
+                return Math.abs(hash).toString(16).toUpperCase();
+            }
+
+            // Form submission
+            $('#hashForm').submit(function(e) {
+                e.preventDefault();
+                
+                // Validate form
+                if (!$('#user').val()) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please select a user',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                if (!$('#sender').val()) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please select a sender',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                if (!$('#connection').val()) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please select an SMPP connection',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                if (!$('#type').val()) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please select a type',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                var formData = $(this).serialize();
+                var url = $(this).attr('action');
+                var method = 'POST';
+                
+                $.ajax({
+                    url: url,
+                    type: method,
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.opener.location.reload();
+                                    window.close();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: response.message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        var errorMsg = 'Something went wrong. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            title: 'Error!',
+                            text: errorMsg,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            });
+
+            // Initial loads
+            loadUsers();
+            loadConnections();
+            
+            // If editing, load senders for the hash's user
+            {% if hash %}
+            loadSenders('{{ hash.user.user_id }}');
+            updateHashValue();
+            {% endif %}
+        });
+    </script>
+</body>
+</html>

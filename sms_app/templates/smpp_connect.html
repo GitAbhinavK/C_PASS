@@ -1,0 +1,19 @@
+<h1>SMPP Connections</h1>
+{% for conn in connections %}
+<div>
+    <strong>{{ conn.connect_name }}</strong> - Status: <span id="status_{{ conn.smpp_id }}">{{ conn.bind_status }}</span>
+    <button onclick="connect({{ conn.smpp_id }})">Connect</button>
+</div>
+{% endfor %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function connect(smpp_id){
+    $.get("/connect_smpp/"+smpp_id+"/", function(data){
+        alert(data.status);
+        if(data.status=="connected"){
+            $("#status_"+smpp_id).text("BOUND");
+        }
+    });
+}
+</script>

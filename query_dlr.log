@@ -1,0 +1,4 @@
+2026-03-02 14:19:07,214 [INFO] Query DLR Daemon started (interval: 300s)
+2026-03-02 14:19:07,253 [INFO] Found 2 messages needing status check
+2026-03-02 14:24:07,273 [INFO] Found 2 messages needing status check
+2026-03-02 14:26:28,483 [INFO] Shutting down...

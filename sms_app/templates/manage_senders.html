@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Manage Senders{% endblock %}
+
+{% block content %}
+<style>
+.container {
+    margin: 20px auto;
+    max-width: 95%;
+}
+.flex-container {
+    display: flex;
+    gap: 20px;
+}
+.table-card, .form-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+.table-card {
+    flex: 0 0 70%;
+    padding: 15px;
+}
+.form-card {
+    flex: 0 0 30%;
+    padding: 15px;
+}
+.card-header {
+    background: #ffefd5;
+    color: #d35400;
+    font-weight: bold;
+    font-size: 18px;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+table th, table td {
+    padding: 8px;
+    border: 1px solid #f0c090;
+}
+table th {
+    background-color: #ffefd5;
+    color: #d35400;
+}
+.actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+.actions button, .actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+.edit-btn {
+    background: #ffa500;
+}
+.delete-btn {
+    background: #d35400;
+}
+form label {
+    font-weight: 600;
+    color: #d35400;
+}
+input, select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #f0c090;
+    border-radius: 5px;
+    font-size: 14px;
+}
+input:focus, select:focus {
+    border-color: #ffa500;
+    outline: none;
+}
+button.submit-btn {
+    background: #ffa500;
+    color: #fff;
+    font-weight: bold;
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+button.submit-btn:hover {
+    background: #ff8c00;
+}
+.btn-secondary {
+    background: #f0ad4e;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+}
+</style>
+
+<div class="container">
+    <!-- <div class="header mb-4">
+        <h2 style="color:#d35400;">Manage Senders</h2>
+    </div> -->
+
+    <div class="flex-container">
+
+        <!-- LEFT: Table -->
+        <div class="table-card">
+            <div class="card-header">Sender List</div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>PE ID</th>
+                            <th>Sender ID</th>
+                            <th>Active</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sender in senders %}
+                        <tr>
+                            <td>{{ sender.sender_id }}</td>
+                            <td>{{ sender.user.username }}</td>
+                            <td>{{ sender.peid }}</td>
+                            <td>{{ sender.sender_name }}</td>
+                            <td>{{ sender.active_flag|yesno:"Yes,No" }}</td>
+                            <td>{{ sender.start_date }}</td>
+                            <td>{{ sender.end_date|default:"-" }}</td>
+                            <td class="actions">
+                                <a href="{% url 'edit_sender' sender.sender_id %}" class="edit-btn" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{% url 'delete_sender' sender.sender_id %}" method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure?')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" style="text-align:center;">No senders found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT: Form -->
+        <div class="form-card">
+            <div class="card-header">{% if edit %}Edit Sender{% else %}Add New Sender{% endif %}</div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div style="color:red;">{{ field.errors }}</div>
+                        {% endif %}
+                    {% endfor %}
+                    <button type="submit" class="submit-btn">{% if edit %}Update{% else %}Create{% endif %}</button>
+                    {% if edit %}
+                        <a href="{% url 'manage_senders' %}" class="btn-secondary">Cancel</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}

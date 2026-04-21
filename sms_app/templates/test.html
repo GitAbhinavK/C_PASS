@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SMPP Connections</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        button { padding: 5px 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>SMPP Connections</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Connection Type</th>
+                <th>Bind Status</th>
+                <th>Is Alive</th>
+                <th>TX Active Sessions</th>
+                <th>RX Active Sessions</th>
+                <th>Last Bind Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conn in connections %}
+            <tr id="row-{{ conn.smpp_id }}">
+                <td>{{ conn.smpp_id }}</td>
+                <td>{{ conn.connect_name }}</td>
+                <td class="connection_mode">{{ conn.connection_mode }}</td>
+                <td class="bind_status">{{ conn.bind_status }}</td>
+                <td class="is_alive">{{ conn.is_alive }}</td>
+                <td class="tx_active_sessions">{{ conn.tx_active_sessions }}</td>
+                <td class="rx_active_sessions">{{ conn.rx_active_sessions }}</td>
+                <td class="last_bind_time">{{ conn.last_bind_time }}</td>
+                <td>
+                    <button class="bind-btn" data-id="{{ conn.smpp_id }}">Bind</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function(){
+            function updateRow(row, data){
+                row.find('.bind_status').text(data.bind_status);
+                row.find('.is_alive').text(data.is_alive);
+                row.find('.tx_active_sessions').text(data.tx_active_sessions);
+                row.find('.rx_active_sessions').text(data.rx_active_sessions);
+                row.find('.last_bind_time').text(data.last_bind_time);
+                row.find('.connection_mode').text(data.connection_mode);
+            }
+
+            $('.bind-btn').click(function(){
+                let smpp_id = $(this).data('id');
+                $.ajax({
+                    url: '{% url "bind_connection" %}',
+                    method: 'POST',
+                    data: {
+                        'smpp_id': smpp_id,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    beforeSend: function(){
+                        alert('Binding SMPP connection...');
+                    },
+                    success: function(response){
+                        if(response.status === 'success'){
+                            let row = $('#row-' + smpp_id);
+                            updateRow(row, response);
+                            alert('Connection bound successfully!');
+                        } else {
+                            alert('Failed to bind connection.');
+                        }
+                    },
+                    error: function(){
+                        alert('Error binding connection.');
+                    }
+                });
+            });
+
+            // Auto-refresh live status every 30 seconds
+            setInterval(function(){
+                $.get('{% url "check_connections" %}', function(data){
+                    data.connections.forEach(function(conn){
+                        let row = $('#row-' + conn.smpp_id);
+                        updateRow(row, conn);
+                    });
+                });
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

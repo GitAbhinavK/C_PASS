@@ -1,0 +1,1670 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}User Management Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-color: {{ user_company.attributes_1|default:'#ff6600' }};
+        --theme-light: rgba(255, 102, 0, 0.1);
+        --theme-dark: #e65c00;
+        --theme-lighter: rgba(255, 102, 0, 0.05);
+        --gray-50: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-400: #94a3b8;
+        --gray-600: #475569;
+        --gray-700: #334155;
+        --gray-800: #1e293b;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+    }
+
+    /* Dark mode color overrides */
+    .dark-mode {
+        --gray-50: #2a2a2a;
+        --gray-100: #1e1e1e;
+        --gray-200: #2d2d2d;
+        --gray-300: #3d3d3d;
+        --gray-400: #8a8a8a;
+        --gray-600: #b0b0b0;
+        --gray-700: #e0e0e0;
+        --gray-800: #ffffff;
+        --text-color: #ffffff;
+        --bg-color: #0d0d0d;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 100vh;
+        color: var(--text-primary);
+    }
+
+    body.dark-mode {
+        background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%) !important;
+        color: #ffffff;
+    }
+
+    .dark-mode {
+        background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%) !important;
+        color: #ffffff;
+    }
+
+    .dark-mode body {
+        background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%) !important;
+        color: #ffffff;
+    }
+
+    .container-fluid {
+        background: inherit;
+        color: inherit;
+    }
+
+    .dark-mode .container-fluid {
+        background: transparent;
+        color: #ffffff;
+    }
+
+    /* Users Table Container */
+    .users-table-container {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        margin-top: 1.5rem;
+    }
+
+    /* Table Header */
+    .table-header {
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-200);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    /* Table Styles */
+    .users-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .users-table th {
+        background: var(--gray-50);
+        padding: 1.25rem 1.5rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--gray-200);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .users-table td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+        transition: all 0.2s ease;
+    }
+
+    .users-table tbody tr {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .users-table tbody tr:hover {
+        background: var(--theme-lighter);
+        transform: translateX(4px);
+    }
+
+    .users-table tbody tr:hover td {
+        border-color: var(--theme-light);
+    }
+
+    /* User Avatar in Table */
+    .table-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(255, 102, 0, 0.15);
+    }
+
+    .table-user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Status Indicator */
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    .status-active {
+        background: var(--success);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .status-inactive {
+        background: var(--danger);
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Badge Styles */
+    .badge {
+        padding: 0.35rem 0.75rem;
+        font-weight: 500;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .badge-role {
+        background: var(--theme-light);
+        color: var(--theme-color);
+        border: 1px solid rgba(255, 102, 0, 0.2);
+    }
+
+    .badge-company {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-200);
+    }
+
+    /* Add User Button */
+    .add-user-btn {
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
+        white-space: nowrap;
+    }
+
+    .add-user-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 102, 0, 0.3);
+        color: white;
+    }
+
+    /* Table Action Buttons */
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-600);
+        background: white;
+        border: 1px solid var(--gray-200);
+        transition: all 0.2s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .action-icon:hover {
+        background: var(--theme-color);
+        color: white;
+        border-color: var(--theme-color);
+        transform: translateY(-1px);
+    }
+
+    /* Search and Filter */
+    .search-wrapper {
+        position: relative;
+        max-width: 420px;
+        width: 100%;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 14px 10px 42px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        background-color: #fff;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--theme-color, #FF6600);
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15);
+    }
+
+    .search-icon {
+        position: absolute;
+        top: 50%;
+        left: 14px;
+        transform: translateY(-50%);
+        color: #999;
+        font-size: 14px;
+        pointer-events: none;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--gray-300);
+        background: white;
+        color: var(--gray-700);
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .filter-btn.active {
+        background: var(--theme-color);
+        color: white;
+        border-color: var(--theme-color);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        border: 2px dashed var(--gray-200);
+    }
+
+    /* Custom Scrollbar for table */
+    .table-responsive {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .table-responsive::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--gray-300);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: var(--gray-400);
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+        color: white;
+        padding: 1.5rem 2rem;
+        border-bottom: none;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+
+    /* Form Styling */
+    .form-section {
+        background: var(--gray-50);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--gray-200);
+    }
+
+    .form-section-title {
+        color: var(--theme-color);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid var(--gray-200);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+    }
+
+    /* Password Validation Styles */
+    .password-strength-meter {
+        height: 4px;
+        background: var(--gray-200);
+        border-radius: 2px;
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    
+    .password-strength-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+    
+    .password-requirements {
+        margin-top: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .requirement {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 4px 0;
+        color: var(--gray-500);
+    }
+    
+    .requirement i {
+        font-size: 0.7rem;
+        width: 14px;
+        text-align: center;
+    }
+    
+    .requirement.valid {
+        color: var(--success);
+    }
+    
+    .requirement.invalid {
+        color: var(--gray-400);
+    }
+    
+    .validation-error {
+        color: var(--danger);
+        font-size: 0.8rem;
+        margin-top: 4px;
+        display: none;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--gray-500);
+        cursor: pointer;
+    }
+    
+    .password-toggle:hover {
+        color: var(--theme-color);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+        
+        .users-table th,
+        .users-table td {
+            padding: 1rem;
+        }
+        
+        .table-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .search-wrapper {
+            max-width: 100%;
+        }
+        
+        .filter-section {
+            justify-content: flex-start;
+        }
+    }
+
+    /* Dark Mode Styles */
+    .dark-mode body {
+        background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+    }
+
+    .dark-mode .users-table-container {
+        background: #1e1e1e;
+        border-color: #2d2d2d;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .dark-mode .table-header {
+        background: #2a2a2a;
+        border-bottom-color: #2d2d2d;
+        color: #ffffff;
+    }
+
+    .dark-mode .users-table {
+        background: #1e1e1e;
+        color: #ffffff;
+    }
+
+    .dark-mode .users-table th {
+        background: #0d0d0d !important;
+        color: #ffffff !important;
+        border-bottom-color: #2d2d2d !important;
+    }
+
+    .dark-mode .users-table td {
+        color: #ffffff !important;
+        border-bottom-color: #2d2d2d !important;
+        background: #1e1e1e !important;
+    }
+
+    .dark-mode .users-table tbody tr:hover {
+        background: #2a2a2a !important;
+    }
+
+    .dark-mode .users-table tbody tr:hover td {
+        border-color: #3d3d3d !important;
+    }
+
+    .dark-mode .search-input {
+        background-color: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .search-input::placeholder {
+        color: #8a8a8a !important;
+    }
+
+    .dark-mode .search-input:focus {
+        border-color: var(--theme-color) !important;
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15) !important;
+    }
+
+    .dark-mode .filter-btn {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .filter-btn:hover {
+        background: #353535 !important;
+        border-color: #4a4a4a !important;
+    }
+
+    .dark-mode .filter-btn.active {
+        background: var(--theme-color) !important;
+        border-color: var(--theme-color) !important;
+        color: white !important;
+    }
+
+    .dark-mode .form-select {
+        background-color: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .form-select:focus {
+        border-color: var(--theme-color) !important;
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15) !important;
+    }
+
+    .dark-mode .text-muted {
+        color: #8a8a8a !important;
+    }
+
+    .dark-mode .small {
+        color: #b0b0b0 !important;
+    }
+
+    .dark-mode .badge-company {
+        background: #2a2a2a !important;
+        color: #b0b0b0 !important;
+        border-color: #3d3d3d !important;
+    }
+
+    .dark-mode .badge-role {
+        background: rgba(255, 102, 0, 0.15) !important;
+        color: #ff9933 !important;
+        border-color: rgba(255, 102, 0, 0.3) !important;
+    }
+
+    .dark-mode .modal-content {
+        background: #1e1e1e !important;
+        border-color: #2d2d2d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .modal-body {
+        background: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .form-section {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+    }
+
+    .dark-mode .form-section-title {
+        color: #ff9933 !important;
+    }
+
+    .dark-mode .form-control,
+    .dark-mode .form-select {
+        background-color: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .form-control:focus,
+    .dark-mode .form-select:focus {
+        border-color: var(--theme-color) !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25) !important;
+    }
+
+    .dark-mode .form-control::placeholder {
+        color: #8a8a8a !important;
+    }
+
+    .dark-mode .form-check-label {
+        color: #ffffff !important;
+    }
+
+    .dark-mode .form-text {
+        color: #b0b0b0 !important;
+    }
+
+    .dark-mode .alert-warning {
+        background: rgba(245, 158, 11, 0.15) !important;
+        border-color: rgba(245, 158, 11, 0.3) !important;
+        color: #fbbf24 !important;
+    }
+
+    .dark-mode .empty-state {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .empty-state h4 {
+        color: #ffffff !important;
+    }
+
+    .dark-mode .pagination {
+        border-top: 1px solid #2d2d2d !important;
+        padding-top: 1.5rem;
+    }
+
+    .dark-mode .page-link {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .page-link:hover {
+        background: #353535 !important;
+        border-color: var(--theme-color) !important;
+        color: var(--theme-color) !important;
+    }
+
+    .dark-mode .page-link.active {
+        background: var(--theme-color) !important;
+        border-color: var(--theme-color) !important;
+    }
+
+    .dark-mode .action-icon {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .action-icon:hover {
+        background: var(--theme-color) !important;
+        color: white !important;
+        border-color: var(--theme-color) !important;
+    }
+
+    .dark-mode .table-responsive::-webkit-scrollbar-track {
+        background: #2a2a2a !important;
+    }
+
+    .dark-mode .table-responsive::-webkit-scrollbar-thumb {
+        background: #3d3d3d !important;
+    }
+
+    .dark-mode .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #4a4a4a !important;
+    }
+
+    .dark-mode .d-flex {
+        color: #ffffff !important;
+    }
+
+    .dark-mode .fw-semibold {
+        color: #ffffff !important;
+    }
+
+    .dark-mode .table-user-avatar {
+        border-color: #2d2d2d !important;
+    }
+
+    .dark-mode .text-theme {
+        color: #ff9933 !important;
+    }
+
+    .dark-mode .btn-secondary {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode .btn-secondary:hover {
+        background: #353535 !important;
+        border-color: #4a4a4a !important;
+    }
+
+    .dark-mode .password-strength-meter {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+    }
+
+    .dark-mode .requirement {
+        color: #8a8a8a !important;
+    }
+
+    .dark-mode .requirement.valid {
+        color: #10b981 !important;
+    }
+
+    .dark-mode .requirement.invalid {
+        color: #6b7280 !important;
+    }
+
+    .dark-mode .input-group-text {
+        background: #2a2a2a !important;
+        border-color: #3d3d3d !important;
+        color: #10b981 !important;
+    }
+
+    .dark-mode .modal-footer {
+        background: #1a1a1a !important;
+        border-top-color: #2d2d2d !important;
+    }
+
+    .dark-mode .border-top-0 {
+        border-top: none !important;
+    }
+
+    .dark-mode .add-user-btn {
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark)) !important;
+        color: white !important;
+        border: none !important;
+    }
+
+    .dark-mode .add-user-btn:hover {
+        color: white !important;
+    }
+
+    .dark-mode .add-user-btn i {
+        color: white !important;
+    }
+
+    /* Keep SweetAlert above Bootstrap modal */
+    .swal-on-modal {
+        z-index: 99999 !important;
+    }
+</style>
+
+<div class="container-fluid px-4 py-4">
+    <!-- Users Table Container -->
+    <div class="users-table-container">
+        <!-- Table Header with Search, Filters & Add User Button -->
+        <div class="table-header">
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input 
+                    type="text"
+                    class="search-input"
+                    placeholder="Search by name, email, or company"
+                    id="userSearch"
+                    aria-label="Search users"
+                >
+            </div>
+            
+            <div class="filter-section">
+                <span class="small text-muted me-2">Filter:</span>
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="admin">Admins</button>
+                <button class="filter-btn" data-filter="recent">Recent</button>
+                <select class="form-select form-select-sm" style="width: auto;" id="sortSelect">
+                    <option value="name">Sort by Name</option>
+                    <option value="company">Sort by Company</option>
+                    <option value="role">Sort by Role</option>
+                    <option value="date">Sort by Date</option>
+                </select>
+                
+                <button class="add-user-btn" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="fas fa-user-plus"></i>
+                    Add User
+                </button>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-responsive">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Contact</th>
+                        <th>{% if request.user.is_superuser %}Company & Role{% else %}Role{% endif %}</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    {% for u in users %}
+                    <tr data-username="{{ u.username|lower }}" 
+                        data-email="{{ u.email|lower }}" 
+                        data-company="{{ u.company.name|lower }}" 
+                        data-role="{{ u.role.role_name|lower }}">
+                        <!-- User Column -->
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="table-user-avatar">
+                                    {% if u.profile_image %}
+                                        <img src="{{ u.profile_image.url }}" alt="{{ u.username }}">
+                                    {% else %}
+                                        {{ u.username|first|upper }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ u.full_name|default:u.username }}</div>
+                                    <div class="small text-muted">@{{ u.username }}</div>
+                                    <div class="small text-muted">{{ u.sms_account_type|default:"" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Contact Column -->
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-envelope me-2 text-theme" style="width: 16px;"></i>
+                                    <span class="text-truncate" style="max-width: 200px;">{{ u.email }}</span>
+                                </div>
+                                {% if u.mobile_number %}
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-phone me-2 text-theme" style="width: 16px;"></i>
+                                    <span>{{ u.mobile_number }}</span>
+                                </div>
+                                {% endif %}
+                                {% if u.tfa_number %}
+                                <div class="small text-muted">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    TFA: {{ u.tfa_number }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Company & Role Column -->
+                        <td>
+                            <div class="d-flex flex-column gap-2">
+                                {% if request.user.is_superuser %}
+                                <div>
+                                    <span class="badge badge-company">
+                                        <i class="fas fa-building"></i>
+                                        {{ u.company.name|default:"—" }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <span class="badge badge-role">
+                                        <i class="fas fa-user-tag"></i>
+                                        {{ u.role.role_name|default:"No Role" }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Location Column -->
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                {% if u.city or u.country %}
+                                <div>
+                                    <i class="fas fa-map-marker-alt me-2 text-theme" style="width: 16px;"></i>
+                                    <span>
+                                        {% if u.city %}{{ u.city }}{% endif %}
+                                        {% if u.country %}, {{ u.country }}{% endif %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if u.region %}
+                                <div class="small text-muted">
+                                    <i class="fas fa-globe me-2"></i>
+                                    {{ u.region }}
+                                </div>
+                                {% endif %}
+                                {% if u.pin_code %}
+                                <div class="small text-muted">
+                                    <i class="fas fa-map-pin me-2"></i>
+                                    {{ u.pin_code }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Status Column -->
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="status-indicator {% if u.is_active %}status-active{% else %}status-inactive{% endif %}"></span>
+                                <span class="fw-medium">
+                                    {% if u.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </div>
+                            {% if u.expiry_date %}
+                            <div class="small text-muted mt-1">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Expires: {{ u.expiry_date|date:"M d, Y" }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Actions Column -->
+                        <td>
+                            <div class="table-actions">
+                                <a href="{% url 'user_detail' u.user_id %}" class="action-icon" title="View Details">
+                                    <i class="fas fa-eye fa-sm"></i>
+                                </a>
+                                <a href="#" class="action-icon" title="Send Message">
+                                    <i class="fas fa-envelope fa-sm"></i>
+                                </a>
+                                <a href="#" class="action-icon" title="More Options">
+                                    <i class="fas fa-ellipsis-h fa-sm"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-users fa-3x" style="color: var(--gray-300);"></i>
+                                </div>
+                                <h4 class="mb-2" style="color: var(--gray-600);">No Users Found</h4>
+                                <p class="text-muted mb-3">Start by adding your first user to the system</p>
+                                <button class="add-user-btn" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                    <i class="fas fa-user-plus"></i>
+                                    Add First User
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if users.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="User pagination">
+                <ul class="pagination justify-content-center">
+                    {% if users.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ users.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in users.paginator.page_range %}
+                    <li class="page-item {% if users.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if users.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ users.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Add New User
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" action="{% url 'add_user' %}" id="addUserForm">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <!-- Personal Information -->
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <i class="fas fa-id-card"></i>
+                                    Personal Information
+                                </h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Username <span class="text-danger">*</span></label>
+                                    <input type="text" name="username" class="form-control" required placeholder="Enter username">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Email <span class="text-danger">*</span></label>
+                                    <input type="email" name="email" class="form-control" required placeholder="user@example.com">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Full Name</label>
+                                    <input type="text" name="full_name" class="form-control" placeholder="John Doe">
+                                </div>
+                                
+                                <div class="input-group mb-3">
+                                    <select class="form-select" name="country_code" style="max-width: 120px;">
+                                        <option value="+91" selected>🇮🇳 +91</option>
+                                        <option value="+1">🇺🇸 +1</option>
+                                        <option value="+44">🇬🇧 +44</option>
+                                        <option value="+61">🇦🇺 +61</option>
+                                        <option value="+971">🇦🇪 +971</option>
+                                    </select>
+                                    <input 
+                                        type="text" 
+                                        name="mobile_number" 
+                                        class="form-control" 
+                                        placeholder="Enter mobile number"
+                                        maxlength="10"
+                                        pattern="[0-9]{10}"
+                                        required
+                                    >
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">TFA Number</label>
+                                    <input type="text" name="tfa_number" class="form-control" placeholder="Optional">
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Location Information
+                                </h6>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Country</label>
+                                        <input type="text" name="country" class="form-control" placeholder="Country">
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Region</label>
+                                        <input type="text" name="region" class="form-control" placeholder="Region">
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">City</label>
+                                        <input type="text" name="city" class="form-control" placeholder="City">
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Pin Code</label>
+                                        <input type="text" name="pin_code" class="form-control" placeholder="Pin Code">
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <label class="form-label fw-medium">Address</label>
+                                        <textarea name="address" class="form-control" rows="2" placeholder="Full address"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Information -->
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <i class="fas fa-user-cog"></i>
+                                    Account Settings
+                                </h6>
+                                
+                                <!-- Company Field -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Company <span class="text-danger">*</span></label>
+                                    {% if request.user.is_superuser %}
+                                        <!-- ONLY Django superuser can select company -->
+                                        <select name="company_id" class="form-select" required id="companySelect">
+                                            <option value="">— Select Company —</option>
+                                            {% for c in companies %}
+                                                <option value="{{ c.company_id }}">{{ c.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}
+                                        <!-- All other users get auto-assigned company -->
+                                        <div class="input-group">
+                                            <input type="text"
+                                                class="form-control"
+                                                value="{{ user_company.name|default:'No Company' }}"
+                                                readonly disabled>
+                                            <input type="hidden"
+                                                name="company_id"
+                                                value="{{ user_company.company_id|default:'' }}">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-building text-success"></i>
+                                            </span>
+                                        </div>
+                                        <div class="form-text text-success">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Company automatically assigned to {{ user_company.name|default:'your company' }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Role Field -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Role <span class="text-danger">*</span></label>
+                                    {% if available_roles %}
+                                        <select name="role_id" class="form-select" required id="roleSelect">
+                                            <option value="">— Select Role —</option>
+                                            {% for r in available_roles %}
+                                            <option value="{{ r.role_id }}">{{ r.role_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="form-text">
+                                            Available roles based on your permissions
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning py-2" role="alert">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            You don't have permission to create users with any role.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Account Type</label>
+                                    <select name="sms_account_type" class="form-select">
+                                        <option value="">— Select Type —</option>
+                                        <option value="Transaction">Transaction</option>
+                                        <option value="Promotional">Promotional</option>
+                                        <option value="Any">Any</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <i class="fas fa-lock"></i>
+                                    Security Settings
+                                </h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Password <span class="text-danger">*</span></label>
+                                    <div class="position-relative">
+                                        <input type="password" name="password" id="password" class="form-control" required 
+                                            placeholder="Enter password" minlength="8">
+                                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Password Strength Meter -->
+                                    <div class="password-strength-meter">
+                                        <div class="password-strength-fill" id="passwordStrength"></div>
+                                    </div>
+                                    <!-- Password Requirements -->
+                                    <div class="password-requirements">
+                                        <div class="requirement invalid" id="reqLength">
+                                            <i class="fas fa-circle"></i>
+                                            <span>At least 8 characters</span>
+                                        </div>
+                                        <div class="requirement invalid" id="reqNumber">
+                                            <i class="fas fa-circle"></i>
+                                            <span>Contains at least one number</span>
+                                        </div>
+                                        <div class="requirement invalid" id="reqLetter">
+                                            <i class="fas fa-circle"></i>
+                                            <span>Contains at least one letter</span>
+                                        </div>
+                                    </div>
+                                    <div class="validation-error" id="passwordError"></div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Confirm Password <span class="text-danger">*</span></label>
+                                    <div class="position-relative">
+                                        <input type="password" name="confirm_password" id="confirmPassword" class="form-control" required 
+                                            placeholder="Confirm password">
+                                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="validation-error" id="confirmPasswordError"></div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="is_active" id="isActive" checked disabled>
+                                        <label class="form-check-label fw-medium" for="isActive">
+                                            Active Account
+                                        </label>
+                                    </div>
+                                    <!-- Auto-fill active status as true -->
+                                    <input type="hidden" name="is_active" value="on">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary-theme" id="submitBtn">
+                        <i class="fas fa-save me-2"></i>
+                        Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Font Awesome CSS from CDN without integrity check -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+    // Initialize dark mode from localStorage when page loads
+    function initializeDarkMode() {
+        const savedTheme = localStorage.getItem('theme');
+        const htmlElement = document.documentElement;
+        const bodyElement = document.body;
+        
+        if (savedTheme === 'dark') {
+            htmlElement.classList.add('dark-mode');
+            bodyElement.classList.add('dark-mode');
+        } else {
+            htmlElement.classList.remove('dark-mode');
+            bodyElement.classList.remove('dark-mode');
+        }
+    }
+    
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeDarkMode);
+    } else {
+        initializeDarkMode();
+    }
+    
+    // Observe HTML element for dark-mode class changes
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'class') {
+                const htmlElement = document.documentElement;
+                const bodyElement = document.body;
+                
+                if (htmlElement.classList.contains('dark-mode')) {
+                    bodyElement.classList.add('dark-mode');
+                } else {
+                    bodyElement.classList.remove('dark-mode');
+                }
+            }
+        });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    
+    // Listen for theme changes from localStorage
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'theme') {
+            initializeDarkMode();
+        }
+    });
+    
+    // Password validation function
+    function validatePassword(password) {
+        const requirements = {
+            length: password.length >= 8,
+            number: /\d/.test(password),
+            letter: /[a-zA-Z]/.test(password)
+        };
+        
+        // Update requirement indicators
+        document.getElementById('reqLength').className = requirements.length ? 'requirement valid' : 'requirement invalid';
+        document.getElementById('reqNumber').className = requirements.number ? 'requirement valid' : 'requirement invalid';
+        document.getElementById('reqLetter').className = requirements.letter ? 'requirement valid' : 'requirement invalid';
+        
+        // Update strength bar
+        const strengthBar = document.getElementById('passwordStrength');
+        const validCount = Object.values(requirements).filter(Boolean).length;
+        
+        if (validCount === 0) {
+            strengthBar.style.width = '0%';
+            strengthBar.style.backgroundColor = 'var(--danger)';
+        } else if (validCount === 1) {
+            strengthBar.style.width = '33%';
+            strengthBar.style.backgroundColor = 'var(--danger)';
+        } else if (validCount === 2) {
+            strengthBar.style.width = '66%';
+            strengthBar.style.backgroundColor = 'var(--warning)';
+        } else {
+            strengthBar.style.width = '100%';
+            strengthBar.style.backgroundColor = 'var(--success)';
+        }
+        
+        return requirements.length && requirements.number && requirements.letter;
+    }
+
+    // Show/hide error message
+    function showError(elementId, message) {
+        const errorEl = document.getElementById(elementId);
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            return true;
+        }
+        return false;
+    }
+
+    function hideError(elementId) {
+        const errorEl = document.getElementById(elementId);
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+
+    // Password toggle function
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        
+        const button = input.nextElementSibling;
+        const icon = button.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUserRole = '{{ request.user.role.role_name|default:"" }}';
+        const currentUserIsSuperuser = {% if request.user.is_superuser %}true{% else %}false{% endif %};
+        const currentUserCompanyId = '{{ request.user.company.company_id|default:"" }}';
+        
+        // Set company for non-super users
+        if (!currentUserIsSuperuser && currentUserRole !== 'Super Admin') {
+            const companySelect = document.querySelector('select[name="company_id"]');
+            if (companySelect) {
+                // Auto-select the current user's company
+                companySelect.value = currentUserCompanyId;
+
+                // If company field is input group (readonly mode)
+                const companyInput = document.querySelector('input[name="company_id"]');
+                if (companyInput) {
+                    companyInput.value = currentUserCompanyId;
+                }
+            }
+        }
+
+        // Auto-select role if only one option is available
+        const roleSelect = document.getElementById('roleSelect');
+        if (roleSelect && roleSelect.options.length === 2) {
+            roleSelect.selectedIndex = 1;
+        }
+        
+        // Password validation on input
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const isValid = validatePassword(password);
+                
+                if (!isValid) {
+                    showError('passwordError', 'Password must be at least 8 characters with letters and numbers');
+                } else {
+                    hideError('passwordError');
+                }
+                
+                // Validate confirm password if it has value
+                if (confirmPasswordInput.value) {
+                    validateConfirmPassword();
+                }
+            });
+        }
+        
+        // Confirm password validation
+        function validateConfirmPassword() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                showError('confirmPasswordError', 'Passwords do not match!');
+                return false;
+            } else {
+                hideError('confirmPasswordError');
+                return true;
+            }
+        }
+        
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', validateConfirmPassword);
+        }
+        
+        // Form submission validation
+        const addUserForm = document.getElementById('addUserForm');
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Reset all errors
+                hideError('passwordError');
+                hideError('confirmPasswordError');
+                
+                let isValid = true;
+                
+                // Password validation
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                // Check password strength
+                if (!validatePassword(password)) {
+                    showError('passwordError', 'Password must be at least 8 characters with at least one letter and one number');
+                    isValid = false;
+                }
+                
+                // Check password match
+                if (password !== confirmPassword) {
+                    showError('confirmPasswordError', 'Passwords do not match!');
+                    isValid = false;
+                }
+                
+                // Role validation
+                const roleSelect = document.getElementById('roleSelect');
+                if (roleSelect && roleSelect.value === '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Role Required',
+                        text: 'Please select a role for the user.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: 'var(--theme-color)',
+                        customClass: { container: 'swal-on-modal' }
+                    }).then(() => roleSelect.focus());
+                    isValid = false;
+                }
+
+                // Company validation for super users
+                if (currentUserIsSuperuser || currentUserRole === 'Super Admin') {
+                    const companySelect = document.getElementById('companySelect');
+                    if (companySelect && companySelect.value === '') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Company Required',
+                            text: 'Please select a company for the user.',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: 'var(--theme-color)',
+                            customClass: { container: 'swal-on-modal' }
+                        }).then(() => companySelect.focus());
+                        isValid = false;
+                    }
+                }
+                
+                // If valid, submit the form
+                if (isValid) {
+                    // Show loading state
+                    const submitBtn = document.getElementById('submitBtn');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+                    
+                    // Submit the form
+                    this.submit();
+                } else {
+                    // Scroll to first error
+                    const firstError = document.querySelector('.validation-error[style*="display: block"]');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+                
+                return false;
+            });
+        }
+        
+        // Search functionality
+        const searchInput = document.getElementById('userSearch');
+        const tableRows = document.querySelectorAll('#usersTableBody tr');
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                tableRows.forEach(row => {
+                    if (row.cells.length < 2) return; // Skip empty state row
+                    
+                    const username = row.getAttribute('data-username') || '';
+                    const email = row.getAttribute('data-email') || '';
+                    const company = row.getAttribute('data-company') || '';
+                    const role = row.getAttribute('data-role') || '';
+                    
+                    const userText = row.cells[0].textContent.toLowerCase();
+                    const contactText = row.cells[1].textContent.toLowerCase();
+                    const companyText = row.cells[2].textContent.toLowerCase();
+                    
+                    if (username.includes(searchTerm) || 
+                        email.includes(searchTerm) || 
+                        company.includes(searchTerm) || 
+                        role.includes(searchTerm) ||
+                        userText.includes(searchTerm) ||
+                        contactText.includes(searchTerm) ||
+                        companyText.includes(searchTerm) ||
+                        searchTerm === '') {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const filter = this.getAttribute('data-filter');
+                applyFilter(filter);
+            });
+        });
+        
+        // Apply filter function
+        function applyFilter(filterType) {
+            tableRows.forEach(row => {
+                if (row.cells.length < 2) return;
+                
+                const statusCell = row.cells[4];
+                const status = statusCell.textContent.toLowerCase();
+                const roleCell = row.cells[2];
+                const role = roleCell.textContent.toLowerCase();
+                
+                switch(filterType) {
+                    case 'all':
+                        row.style.display = '';
+                        break;
+                    case 'active':
+                        row.style.display = status.includes('active') ? '' : 'none';
+                        break;
+                    case 'admin':
+                        row.style.display = role.includes('admin') ? '' : 'none';
+                        break;
+                    case 'recent':
+                        row.style.display = '';
+                        break;
+                }
+            });
+        }
+        
+        // Sort functionality
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const sortBy = this.value;
+                console.log('Sort by:', sortBy);
+            });
+        }
+        
+        // Auto-focus username field when modal opens
+        const addUserModal = document.getElementById('addUserModal');
+        if (addUserModal) {
+            addUserModal.addEventListener('shown.bs.modal', function () {
+                const usernameInput = this.querySelector('input[name="username"]');
+                if (usernameInput) {
+                    usernameInput.focus();
+                }
+            });
+            
+            // Reset password validation when modal closes
+            addUserModal.addEventListener('hidden.bs.modal', function() {
+                // Reset password strength meter
+                const strengthBar = document.getElementById('passwordStrength');
+                strengthBar.style.width = '0%';
+                
+                // Reset requirement indicators
+                document.querySelectorAll('.requirement').forEach(el => {
+                    el.className = 'requirement invalid';
+                });
+                
+                // Hide error messages
+                hideError('passwordError');
+                hideError('confirmPasswordError');
+            });
+        }
+        
+        // SweetAlert messages — re-open modal on server-side errors
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                // Re-open the Add User modal so the user doesn't lose context
+                const _modalEl = document.getElementById('addUserModal');
+                if (_modalEl) {
+                    bootstrap.Modal.getOrCreateInstance(_modalEl).show();
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{{ message|escapejs }}',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: 'var(--theme-color)',
+                    customClass: { container: 'swal-on-modal' }
+                });
+                {% else %}
+                Swal.fire({
+                    icon: '{% if message.tags == "success" %}success{% else %}info{% endif %}',
+                    title: '{{ message|escapejs }}',
+                    timer: 2500,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+
+{% endblock %}

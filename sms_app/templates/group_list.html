@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Group Management{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 style="color: var(--theme-color);">
+            <i class="fas fa-users"></i> Manage Groups
+        </h4>
+        <button class="btn" style="background: var(--theme-color); color: #fff;"
+                data-bs-toggle="modal" data-bs-target="#createGroupModal">
+            <i class="fas fa-plus"></i> Add Group
+        </button>
+    </div>
+
+    <table class="table table-striped table-hover">
+        <thead style="background: var(--theme-color); color: white;">
+            <tr>
+                <th>#</th>
+                <th>Group Name</th>
+                <th>Total Contacts</th>
+                <th>Created Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for group in groups %}
+            {% with lines=group.lines.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ group.group_name }}</td>
+                <td>{{ lines.count }}</td>
+                <td>{{ group.created_date|date:"d M Y H:i" }}</td>
+                <td>
+                    <button class="btn btn-sm editBtn" 
+                            style="background: var(--theme-color); color: #fff;"
+                            data-id="{{ group.group_id }}"
+                            data-name="{{ group.group_name }}"
+                            data-lines='[
+                                {% for line in lines %}
+                                    {"contact_name":"{{ line.contact_name|escapejs }}","mobile_number":"{{ line.mobile_number|escapejs }}"}{% if not forloop.last %},{% endif %}
+                                {% endfor %}
+                            ]'>
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <a href="{% url 'group_delete' group.group_id %}" 
+                       class="btn btn-sm" style="background: crimson; color: #fff;"
+                       onclick="return confirm('Delete this group?');">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endwith %}
+        {% empty %}
+            <tr><td colspan="5" class="text-center">No groups found.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form action="{% url 'group_create' %}" method="POST">
+        {% csrf_token %}
+        <div class="modal-header text-white" style="background: var(--theme-color);">
+          <h5 class="modal-title">Create Group</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label>Group Name</label>
+                <input type="text" name="group_name" class="form-control" required>
+            </div>
+
+            <h6>Contacts</h6>
+            <div id="contactContainer">
+                <div class="row g-2 contactRow">
+                    <div class="col-md-6">
+                        <input type="text" name="contact_name[]" placeholder="Contact Name" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" name="mobile_number[]" placeholder="Mobile Number" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-sm mt-2" id="addContactBtn" 
+                    style="background: var(--theme-color); color: #fff;">+ Add More</button>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn" style="background: var(--theme-color); color: #fff;">Save Group</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editGroupModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="editForm" method="POST">
+        {% csrf_token %}
+        <div class="modal-header text-white" style="background: var(--theme-color);">
+          <h5 class="modal-title">Edit Group</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label>Group Name</label>
+                <input type="text" name="group_name" id="editGroupName" class="form-control" required>
+            </div>
+            <div id="editContactContainer"></div>
+            <button type="button" class="btn btn-sm mt-2" id="editAddContactBtn" 
+                    style="background: var(--theme-color); color: #fff;">+ Add More</button>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn" style="background: var(--theme-color); color: #fff;">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Add contact row in Create Modal
+document.getElementById('addContactBtn').addEventListener('click', () => {
+    const container = document.getElementById('contactContainer');
+    const newRow = document.createElement('div');
+    newRow.classList.add('row', 'g-2', 'contactRow');
+    newRow.innerHTML = `
+        <div class="col-md-6"><input type="text" name="contact_name[]" placeholder="Contact Name" class="form-control"></div>
+        <div class="col-md-6"><input type="text" name="mobile_number[]" placeholder="Mobile Number" class="form-control" required></div>
+    `;
+    container.appendChild(newRow);
+});
+
+// Edit group modal
+document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        const lines = JSON.parse(btn.getAttribute('data-lines'));
+
+        document.getElementById('editGroupName').value = name;
+        document.getElementById('editForm').action = `/groups/update/${id}/`;
+
+        const container = document.getElementById('editContactContainer');
+        container.innerHTML = '';
+        lines.forEach(l => {
+            container.innerHTML += `
+                <div class="row g-2 contactRow mb-2">
+                    <div class="col-md-6"><input type="text" name="contact_name[]" value="${l.contact_name}" class="form-control"></div>
+                    <div class="col-md-6"><input type="text" name="mobile_number[]" value="${l.mobile_number}" class="form-control" required></div>
+                </div>
+            `;
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('editGroupModal'));
+        modal.show();
+    });
+});
+
+// Add more in Edit Modal
+document.getElementById('editAddContactBtn').addEventListener('click', () => {
+    const container = document.getElementById('editContactContainer');
+    const newRow = document.createElement('div');
+    newRow.classList.add('row', 'g-2', 'contactRow', 'mb-2');
+    newRow.innerHTML = `
+        <div class="col-md-6"><input type="text" name="contact_name[]" placeholder="Contact Name" class="form-control"></div>
+        <div class="col-md-6"><input type="text" name="mobile_number[]" placeholder="Mobile Number" class="form-control" required></div>
+    `;
+    container.appendChild(newRow);
+});
+</script>
+
+{% endblock %}

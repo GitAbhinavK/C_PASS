@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load messages %}
+
+{% block title %}Manage Roles{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="header">Manage Roles</h2>
+
+    <!-- Flex container -->
+    <div class="flex-container">
+
+        <!-- LEFT: Add/Edit Form -->
+        <div class="card form-card">
+            <h4>{% if role_instance %}Edit Role{% else %}Add New Role{% endif %}</h4>
+
+            <form method="post" id="roleForm">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}<br>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="error">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-success">
+                    {% if role_instance %}Update Role{% else %}Add Role{% endif %}
+                </button>
+
+                {% if role_instance %}
+                    <a href="{% url 'manage_roles' %}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- RIGHT: Role Table -->
+        <div class="card table-card">
+            <h4>Existing Roles</h4>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Role Name</th>
+                            <th>Company</th>
+                            <th>Flag</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for role in roles %}
+                        <tr>
+                            <td>{{ role.role_name }}</td>
+                            <td>{{ role.company.name }}</td>
+                            <td>{{ role.flag }}</td>
+                            <td>{{ role.start_date }}</td>
+                            <td>{{ role.end_date }}</td>
+                            <td>
+                                <a href="{% url 'manage_roles' role.role_id %}" class="btn btn-primary">Edit</a>
+
+                                <a href="{% url 'delete_role' role.role_id %}"
+                                   class="btn btn-danger delete-btn"
+                                   data-role="{{ role.role_name }}">
+                                   Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No roles available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= SweetAlert2 ================= -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Django Messages → SweetAlert -->
+{% if messages %}
+<script>
+    {% for message in messages %}
+        Swal.fire({
+            icon: "{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}info{% endif %}",
+            title: "{{ message }}",
+            showConfirmButton: false,
+            timer: 2000
+        });
+    {% endfor %}
+</script>
+{% endif %}
+
+<!-- Delete Confirmation -->
+<script>
+document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const url = this.href;
+        const roleName = this.getAttribute('data-role');
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Delete role "${roleName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Flex container */
+.flex-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Cards */
+.card {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Form card */
+.form-card {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Table card */
+.table-card {
+    flex: 2;
+    min-width: 400px;
+}
+
+/* Table wrapper */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+table th {
+    background-color: #f2f2f2;
+}
+
+/* Buttons */
+.btn {
+    padding: 6px 12px;
+    text-decoration: none;
+    border-radius: 5px;
+    color: #fff;
+    margin-right: 5px;
+    display: inline-block;
+}
+
+.btn-success { background-color: #28a745; }
+.btn-secondary { background-color: #6c757d; }
+.btn-primary { background-color: #007bff; }
+.btn-danger { background-color: #dc3545; }
+
+/* Error */
+.error {
+    color: red;
+    font-size: 0.9em;
+}
+
+/* Form spacing */
+.form-group {
+    margin-bottom: 15px;
+}
+</style>
+
+{% endblock %}

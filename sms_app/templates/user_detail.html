@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+<style>
+ :root {
+            --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+        }
+        .bg-theme { background-color: var(--theme-color) !important; }
+        .text-theme { color: var(--theme-color) !important; }
+        .btn-theme {
+            background-color: var(--theme-color) !important;
+            color: #fff !important;
+        }
+        .btn-theme:hover {
+            background-color: #e65c00 !important;
+        }
+        .always-readonly {
+            background: #f5f5f5 !important;
+            color: #333333 !important;
+            cursor: not-allowed !important;
+        }
+        .dark-mode .always-readonly {
+            background: #1a1a1a !important;
+            color: #ffffff !important;
+            border-color: #3d3d3d !important;
+            cursor: not-allowed !important;
+        }
+</style>
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center bg-theme text-white rounded-top-4">
+            <h4 class="mb-0">👤 User Details - {{ user.username }}</h4>
+            <div>
+                {% comment %} <button id="editBtn" class="btn btn-warning btn-sm me-2">✏️ Edit</button> {% endcomment %}
+                <button id="editBtn" class="btn btn-warning btn-sm me-2" 
+                        style="background-color: white; color: #191917ff; border: 1px solid #ffc107;">
+                    ✏️ Edit
+                </button>
+
+                <button id="saveBtn" class="btn btn-success btn-sm d-none">💾 Save</button>
+                <button id="cancelBtn" class="btn btn-secondary btn-sm d-none">❌ Cancel</button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <form id="userForm">
+                {% csrf_token %}
+
+                <!-- Section 1: Basic Information -->
+                <h5 class="text-theme mb-3">📋 Basic Information</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label>Username</label>
+                        <input type="text" name="username" value="{{ user.username }}" class="form-control always-readonly" readonly disabled>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" value="{{ user.full_name|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Email</label>
+                        <input type="email" name="email" value="{{ user.email }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Mobile Number</label>
+                        <input type="text" name="mobile_number" value="{{ user.mobile_number|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>TFA Number</label>
+                        <input type="text" name="tfa_number" value="{{ user.tfa_number|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Country</label>
+                        <input type="text" name="country" value="{{ user.country|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Region</label>
+                        <input type="text" name="region" value="{{ user.region|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>City</label>
+                        <input type="text" name="city" value="{{ user.city|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Address</label>
+                        <textarea name="address" class="form-control" readonly>{{ user.address|default:'' }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Pin code</label>
+                        <input type="text" name="pin_code" value="{{ user.pin_code|default:'' }}" class="form-control" readonly>
+
+                </div>
+
+                <hr>
+
+                <!-- Section 2: Company & Role -->
+                <h5 class="text-theme mb-3">🏢 Company & Role</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label>Company</label>
+                        <select name="company" class="form-select" disabled>
+                            <option value="">-- Select Company --</option>
+                            {% for c in companies %}
+                                <option value="{{ c.company_id }}" {% if user.company and user.company.company_id == c.company_id %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Role</label>
+                        <select name="role" class="form-select" disabled>
+                            <option value="">-- Select Role --</option>
+                            {% for r in available_roles %}
+                                <option value="{{ r.role_id }}" {% if user.role and user.role.role_id == r.role_id %}selected{% endif %}>{{ r.role_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>SMS Account Type</label>
+                        <select name="sms_account_type" class="form-select" disabled>
+                            <option value="">-- Select Type --</option>
+                            {% for val, label in user.SMS_ACCOUNT_TYPE %}
+                                <option value="{{ val }}" {% if user.sms_account_type == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Section 3: SMPP Configuration -->
+                <h5 class="text-theme mb-3">📡 SMPP Settings</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label>SMPP Enabled</label>
+                        <select name="smpp_enabled" class="form-select" disabled>
+                            <option value="True" {% if user.smpp_enabled %}selected{% endif %}>Yes</option>
+                            <option value="False" {% if not user.smpp_enabled %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Bind Mode</label>
+                        <select name="smpp_bind_mode" class="form-select" disabled>
+                            <option value="">-- Select Mode --</option>
+                            <option value="TX" {% if user.smpp_bind_mode == "TX" %}selected{% endif %}>TX</option>
+                            <option value="RX" {% if user.smpp_bind_mode == "RX" %}selected{% endif %}>RX</option>
+                            <option value="TRX" {% if user.smpp_bind_mode == "TRX" %}selected{% endif %}>TRX</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Port</label>
+                        <input type="number" name="smpp_port" value="{{ user.smpp_port|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Sessions</label>
+                        <input type="number" name="smpp_sessions" value="{{ user.smpp_sessions|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>TPS</label>
+                        <input type="number" name="smpp_tps" value="{{ user.smpp_tps|default:'' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Posting Start Hour</label>
+                        <input type="time" name="sms_posting_start_hour"
+                            value="{{ user.sms_posting_start_hour|time:'H:i' }}"
+                            class="form-control" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Posting End Hour</label>
+                        <input type="time" name="sms_posting_end_hour"
+                            value="{{ user.sms_posting_end_hour|time:'H:i' }}"
+                            class="form-control" readonly>
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <!-- Section 4: Audit Info -->
+                <h5 class="text-theme mb-3">🕒 Audit Information</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label>Join Date</label>
+                        <input type="text" value="{{ user.join_date }}" class="form-control" disabled>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Expiry Date</label>
+                        <input type="date" name="expiry_date" value="{{ user.expiry_date|date:'Y-m-d' }}" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Created By</label>
+                        <input type="text" value="{{ user.create_by|default:'' }}" class="form-control" disabled>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Last Updated By</label>
+                        <input type="text" value="{{ user.last_updated_by|default:'' }}" class="form-control" disabled>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const editBtn = document.getElementById('editBtn');
+const saveBtn = document.getElementById('saveBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+
+editBtn.addEventListener('click', () => {
+    document.querySelectorAll('#userForm input, #userForm textarea').forEach(el => {
+        if (el.classList.contains('always-readonly')) return;
+        el.removeAttribute('readonly');
+        el.style.border = '1px solid #ccc';
+    });
+    document.querySelectorAll('#userForm select').forEach(sel => sel.disabled = false);
+    editBtn.classList.add('d-none');
+    saveBtn.classList.remove('d-none');
+    cancelBtn.classList.remove('d-none');
+});
+
+cancelBtn.addEventListener('click', () => window.location.reload());
+
+saveBtn.addEventListener('click', () => {
+    const formData = new FormData(document.getElementById('userForm'));
+    fetch("{% url 'update_user_detail' user.user_id %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("✅ User updated successfully!");
+            window.location.reload();
+        } else {
+            alert("❌ " + data.error);
+        }
+    });
+});
+</script>
+{% endblock %}

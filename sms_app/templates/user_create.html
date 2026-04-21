@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Create User{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 p-4 rounded-4 oracle-form">
+        <h2 class="mb-4 text-center fw-bold text-orange">Create New User</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} text-center">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- USER INFO SECTION -->
+            <h5 class="section-title mt-3">🧍‍♂️ User Information</h5>
+            <hr class="section-divider">
+            <div class="form-grid">
+                {% for field in form %}
+                    {% if field.name in "username,email,full_name,mobile_number,tfa_number,user_Account_type,address,pin_code,expiry_date,country,region,city" %}
+                        <div class="form-block">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+
+                            {% if field.name == "email" %}
+                                {% render_field field class="form-control" type="email" placeholder="Enter email address" %}
+                            {% elif field.name == "expiry_date" %}
+                                {% render_field field class="form-control" type="date" %}
+                            {% else %}
+                                {% render_field field class="form-control" placeholder=field.label %}
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- COMPANY & ROLE INFO -->
+            <h5 class="section-title mt-4">🏢 Company & Role Information</h5>
+            <hr class="section-divider">
+            <div class="form-grid">
+                {% for field in form %}
+                    {% if field.name in "company,role,user_status,company_status,tier_level,create_by" %}
+                        <div class="form-block">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+
+                            {% if field.name == "role" %}
+                                {% render_field field class="form-select" %}
+                            {% else %}
+                                {% render_field field class="form-control" placeholder=field.label %}
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- MESSAGE CONFIGURATION INFO -->
+            <h5 class="section-title mt-4">💬 Message Configuration Info</h5>
+            <hr class="section-divider">
+            <div class="form-grid">
+                {% for field in form %}
+                    {% if field.name == "sms_account_type" or field.name == "sms_posting_start_hour" or field.name == "sms_posting_end_hour" or field.name == "dlt_entity_id" or field.name == "smpp_enabled" or field.name == "hide_pricing" or field.name == "smpp_bind_mode" or field.name == "smpp_sessions" or field.name == "smpp_tps" or field.name == "smpp_port" %}
+                        <div class="form-block">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+
+                            {% if field.name == "sms_posting_start_hour" or field.name == "sms_posting_end_hour" %}
+                                {% render_field field class="form-control" type="time" %}
+                            {% else %}
+                                {% render_field field class="form-control" placeholder=field.label %}
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+
+            <!-- PASSWORD SECTION -->
+            <h5 class="section-title mt-4">🔒 Security Information</h5>
+            <hr class="section-divider">
+            <div class="form-grid">
+                {% for field in form %}
+                    {% if field.name in "password,confirm_password" %}
+                        <div class="form-block">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {% render_field field class="form-control" type="password" placeholder=field.label %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- SUBMIT BUTTON -->
+            <div class="text-center mt-5">
+                <button type="submit" class="btn btn-orange px-5 py-2 rounded-pill">
+                    <i class="fas fa-user-plus me-2"></i> Create User
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* --- FORM CARD --- */
+    .oracle-form {
+        background: #fff;
+        border-radius: 12px;
+        padding: 35px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- SECTION STYLING --- */
+    .section-title {
+        font-weight: 700;
+        color: #f57c00;
+        font-size: 16px;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .section-divider {
+        border: 0;
+        height: 2px;
+        background: linear-gradient(to right, #f57c00, #ffc107);
+        margin-bottom: 15px;
+    }
+
+    /* --- 4 COLUMN GRID --- */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px 30px;
+        margin-bottom: 10px;
+    }
+
+    .form-block {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 13px;
+        color: #333;
+        margin-bottom: 4px;
+    }
+
+    .form-control,
+    .form-select {
+        height: 30px;
+        border-radius: 6px;
+        border: 1px solid #bbb;
+        padding: 3px 8px;
+        font-size: 13px;
+        background-color: #fdfdfd;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #f57c00;
+        box-shadow: 0 0 0 0.1rem rgba(245, 124, 0, 0.25);
+    }
+
+    /* --- BUTTON STYLING --- */
+    .btn-orange {
+        background: linear-gradient(45deg, #ff9800, #f57c00);
+        border: none;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.5px;
+        transition: 0.3s;
+    }
+
+    .btn-orange:hover {
+        background: linear-gradient(45deg, #f57c00, #ef6c00);
+        transform: scale(1.03);
+        box-shadow: 0 4px 10px rgba(245, 124, 0, 0.3);
+    }
+
+    .text-orange {
+        color: #f57c00;
+    }
+
+    h2 {
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .text-danger {
+        font-size: 12px;
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 1200px) {
+        .form-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

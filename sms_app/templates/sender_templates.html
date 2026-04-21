@@ -1,0 +1,876 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sender Management{% endblock %}
+
+{% block content %}
+<style>
+:root {
+    --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+    --theme-dark:  #e65c00;
+    --theme-light: rgba(255, 102, 0, 0.1);
+    --theme-lighter: rgba(255, 102, 0, 0.05);
+    --radius: 14px;
+    --card-bg: #ffffff;
+    --card-border: #e9ecef;
+    --table-head-bg: #f8f9fa;
+    --table-row-hover: rgba(255, 102, 0, 0.04);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --input-bg: #ffffff;
+    --input-border: #dee2e6;
+    --modal-bg: #ffffff;
+    --shadow: 0 4px 24px rgba(0,0,0,0.07);
+    --shadow-hover: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+/* ── Dark mode overrides ── */
+.dark-mode {
+    --card-bg: #1e1e1e;
+    --card-border: #2d2d2d;
+    --table-head-bg: #161616;
+    --table-row-hover: rgba(255, 102, 0, 0.08);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --input-bg: #2a2a2a;
+    --input-border: #3a3a3a;
+    --modal-bg: #1e1e1e;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --shadow-hover: 0 8px 32px rgba(0,0,0,0.5);
+    --theme-light: rgba(255, 102, 0, 0.15);
+    --theme-lighter: rgba(255, 102, 0, 0.06);
+}
+
+/* ── Page wrapper ── */
+.sender-page {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ── Page header ── */
+.sender-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.sender-page-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sender-page-header h2 span.icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--theme-light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-color);
+    font-size: 1.1rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.btn-theme {
+    background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+    color: #fff !important;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(255,102,0,0.25);
+    text-decoration: none;
+}
+.btn-theme:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(255,102,0,0.35);
+    color: #fff !important;
+}
+
+.btn-outline-theme {
+    background: transparent;
+    color: var(--theme-color) !important;
+    border: 2px solid var(--theme-color);
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+}
+.btn-outline-theme:hover {
+    background: var(--theme-color);
+    color: #fff !important;
+    transform: translateY(-2px);
+}
+
+/* ── Main card ── */
+.sender-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+/* ── Stats row ── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-chip {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+}
+
+.stat-chip .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--theme-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.stat-chip .stat-info .stat-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.stat-chip .stat-info .stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+/* ── Search bar ── */
+.table-toolbar {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 360px;
+}
+
+.search-wrap i {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 9px 14px 9px 36px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 9px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 3px rgba(255,102,0,0.12);
+}
+
+.search-input::placeholder { color: var(--text-muted); }
+
+/* ── Table ── */
+.sender-table-wrap {
+    overflow-x: auto;
+}
+
+.sender-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+    color: var(--text-main);
+}
+
+.sender-table thead tr th {
+    background: var(--table-head-bg);
+    padding: 13px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--card-border);
+    white-space: nowrap;
+}
+
+.sender-table tbody tr td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--card-border);
+    vertical-align: middle;
+    color: var(--text-main);
+    transition: background 0.15s;
+}
+
+.sender-table tbody tr:last-child td { border-bottom: none; }
+
+.sender-table tbody tr:hover td {
+    background: var(--table-row-hover);
+}
+
+/* user avatar cell */
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* badge */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge-active   { background: rgba(16,185,129,0.12); color: #10b981; }
+.badge-inactive { background: rgba(239, 68, 68,0.12); color: #ef4444; }
+
+/* senderid pill */
+.sender-id-pill {
+    display: inline-block;
+    background: var(--theme-lighter);
+    color: var(--theme-color);
+    border: 1px solid rgba(255,102,0,0.2);
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+/* action buttons */
+.tbl-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1.5px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.tbl-btn:hover {
+    background: var(--theme-color);
+    color: #fff !important;
+    border-color: var(--theme-color);
+    transform: translateY(-1px);
+}
+
+.tbl-btn.danger:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+/* empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 14px;
+    opacity: 0.35;
+}
+
+/* ── Modal ── */
+.modal-content {
+    background: var(--modal-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 18px !important;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18) !important;
+    color: var(--text-main) !important;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--theme-color), var(--theme-dark)) !important;
+    color: #fff !important;
+    padding: 18px 24px !important;
+    border-bottom: none !important;
+}
+
+.modal-header .modal-title { font-weight: 700; font-size: 1rem; }
+.modal-header .btn-close { filter: brightness(0) invert(1); opacity: 0.85; }
+.modal-header .btn-close:hover { opacity: 1; }
+
+.modal-body { padding: 24px !important; background: var(--modal-bg) !important; }
+.modal-footer {
+    padding: 16px 24px !important;
+    border-top: 1px solid var(--card-border) !important;
+    background: var(--modal-bg) !important;
+}
+
+/* form fields in modal */
+.modal-body .form-label {
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    background: var(--input-bg) !important;
+    border: 1.5px solid var(--input-border) !important;
+    border-radius: 9px !important;
+    color: var(--text-main) !important;
+    padding: 10px 13px !important;
+    font-size: 0.875rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--theme-color) !important;
+    box-shadow: 0 0 0 3px rgba(255,102,0,0.12) !important;
+    outline: none;
+}
+
+.modal-body .form-control::placeholder { color: var(--text-muted); }
+
+.modal-body .form-control[readonly],
+.modal-body .form-control[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* form switch */
+.form-check-input:checked {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+}
+
+/* import instruction */
+.import-instructions {
+    background: var(--theme-lighter);
+    border: 1px solid rgba(255,102,0,0.15);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    margin-bottom: 16px;
+}
+
+.import-instructions strong { color: var(--theme-color); }
+
+/* column reference table */
+.col-ref-table { font-size: 0.82rem; }
+.col-ref-table thead th {
+    background: var(--table-head-bg) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-color: var(--card-border) !important;
+}
+.col-ref-table tbody td {
+    color: var(--text-main) !important;
+    border-color: var(--card-border) !important;
+    background: var(--modal-bg) !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .sender-page { padding: 14px; }
+    .sender-page-header h2 { font-size: 1.3rem; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .sender-table thead tr th,
+    .sender-table tbody tr td { padding: 10px 12px; }
+}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<div class="sender-page">
+
+    <!-- Page Header -->
+    <div class="sender-page-header">
+        <h2>
+            <span class="icon-wrap"><i class="fas fa-paper-plane"></i></span>
+            Sender Management
+        </h2>
+        <div class="header-actions">
+            <button class="btn-outline-theme" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import"></i> Import Excel
+            </button>
+            <button class="btn-theme" data-bs-toggle="modal" data-bs-target="#addSenderModal">
+                <i class="fas fa-plus"></i> Add Sender
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-chip">
+            <div class="stat-icon"><i class="fas fa-id-badge"></i></div>
+            <div class="stat-info">
+                <div class="stat-val">{{ senders|length }}</div>
+                <div class="stat-label">Total Senders</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-val">{{ senders|length }}</div>
+                <div class="stat-label">Active Senders</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="stat-icon"><i class="fas fa-building"></i></div>
+            <div class="stat-info">
+                <div class="stat-val">{{ user_company.name|default:"—" }}</div>
+                <div class="stat-label">Company</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="sender-card">
+
+        <!-- Toolbar -->
+        <div class="table-toolbar">
+            <div class="search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" id="senderSearch" placeholder="Search sender ID, PE ID or user…">
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="sender-table-wrap">
+            <table class="sender-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Sender ID</th>
+                        <th>PE ID</th>
+                        <th>Status</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th style="text-align:center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="senderTableBody">
+                    {% for s in senders %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">{{ s.user.username|first|upper }}</div>
+                                <span>{{ s.user.username|default:"—" }}</span>
+                            </div>
+                        </td>
+                        <td><span class="sender-id-pill">{{ s.sender_name }}</span></td>
+                        <td>{{ s.peid|default:"—" }}</td>
+                        <td>
+                            {% if s.active_flag %}
+                                <span class="status-badge badge-active"><i class="fas fa-circle" style="font-size:0.5rem;"></i> Active</span>
+                            {% else %}
+                                <span class="status-badge badge-inactive"><i class="fas fa-circle" style="font-size:0.5rem;"></i> Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ s.start_date|default:"—" }}</td>
+                        <td>{{ s.end_date|default:"—" }}</td>
+                        <td style="text-align:center;">
+                            <div style="display:flex;gap:6px;justify-content:center;">
+                                <button class="tbl-btn" onclick="openEditModal({{ s.sender_id }})" title="Edit Sender">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <form action="{% url 'delete_sender' s.sender_id %}" method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    {% comment %} <button type="submit" class="tbl-btn danger"
+                                        onclick="return confirm('Delete this sender?')" title="Delete Sender">
+                                        <i class="fas fa-trash"></i>
+                                    </button> {% endcomment %}
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-paper-plane d-block"></i>
+                                <div style="font-size:1rem;font-weight:600;margin-bottom:6px;">No Senders Found</div>
+                                <div style="font-size:0.85rem;">Click <strong>Add Sender</strong> to get started.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<!-- ─────────── Add Sender Modal ─────────── -->
+<div class="modal fade" id="addSenderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add New Sender</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_sender' %}" id="addSenderForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">User</label>
+                        <input type="text" class="form-control" value="{{ request.user.username }}" readonly>
+                        <input type="hidden" name="user_id" value="{{ request.user.id }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sender ID</label>
+                        <input type="text" name="sender_name" id="addSenderName" class="form-control"
+                               placeholder="Enter sender ID" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">PE ID <span style="font-weight:400;text-transform:none;font-size:0.78rem;">(numbers only, optional)</span></label>
+                        <input type="text" name="peid" id="addPeid" class="form-control"
+                               pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                               placeholder="Optional">
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="active_flag" id="addActiveFlag" checked>
+                        <label class="form-check-label" for="addActiveFlag" style="color:var(--text-main);font-weight:500;">Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-outline-theme" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme"><i class="fas fa-save me-1"></i> Add Sender</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ─────────── Import Modal ─────────── -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-import me-2"></i>Import Senders from Excel / CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'import_senders' %}" enctype="multipart/form-data" id="importForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="import-instructions">
+                        <strong>Instructions</strong><br>
+                        1. Download the sample template below<br>
+                        2. Fill in the <code>sender_name</code> and <code>peid</code> columns<br>
+                        3. Upload the completed file
+                    </div>
+
+                    <a href="{% url 'download_sample_excel' %}" class="btn-outline-theme d-inline-flex mb-4" style="font-size:0.82rem;">
+                        <i class="fas fa-download me-1"></i> Download Sample Template
+                    </a>
+
+                    <div class="mb-3">
+                        <label class="form-label">User</label>
+                        <input type="text" class="form-control" value="{{ request.user.username }}" readonly>
+                        <input type="hidden" name="import_user_id" value="{{ request.user.id }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Upload Excel / CSV File</label>
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                    </div>
+
+                    <table class="table table-bordered col-ref-table">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Required</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>sender_name</code></td>
+                                <td>✅ Yes</td>
+                                <td>Sender ID (alphanumeric based on account type)</td>
+                            </tr>
+                            <tr>
+                                <td><code>peid</code></td>
+                                <td>❌ Optional</td>
+                                <td>PE ID number (numbers only)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-outline-theme" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme"><i class="fas fa-upload me-1"></i> Import Senders</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal Container -->
+<div id="editModalContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+const currentUserAccountType = "{{ request.user.account_type|default:request.user.sms_account_type|default:'' }}".toLowerCase();
+
+/* ── Live search ── */
+document.getElementById('senderSearch').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#senderTableBody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+/* ── SweetAlert helpers ── */
+function showError(msg) {
+    Swal.fire({ icon:'error', title:'Error', html:msg, confirmButtonColor:'var(--theme-color)', confirmButtonText:'OK' });
+}
+function showSuccess(msg) {
+    Swal.fire({ icon:'success', title:'Success', html:msg, confirmButtonColor:'var(--theme-color)', confirmButtonText:'OK' })
+        .then(r => { if (r.isConfirmed) location.reload(); });
+}
+function showWarning(msg) {
+    Swal.fire({ icon:'warning', title:'Warning', html:msg, confirmButtonColor:'var(--theme-color)', confirmButtonText:'OK' });
+}
+
+/* ── Validation ── */
+function validateSenderName(name, type) {
+    type = (type || currentUserAccountType).toLowerCase();
+    if (type === 'transaction' && !/^[A-Za-z]+$/.test(name))
+        return showError("Sender ID must contain only alphabets for Transaction accounts."), false;
+    if (type === 'promotional' && !/^[0-9]+$/.test(name))
+        return showError("Sender ID must contain only numbers for Promotional accounts."), false;
+    if (!/^[A-Za-z0-9]+$/.test(name))
+        return showError("Sender ID must be alphanumeric."), false;
+    return true;
+}
+function validatePeid(peid) {
+    if (peid && !/^\d+$/.test(peid)) { showError("PE ID must contain only numbers."); return false; }
+    return true;
+}
+function setupInputRestriction(el, type) {
+    type = (type || currentUserAccountType).toLowerCase();
+    el.oninput = null;
+    if (type === 'transaction') {
+        el.placeholder = "Letters only (A–Z)";
+        el.oninput = () => el.value = el.value.replace(/[^A-Za-z]/g, '');
+    } else if (type === 'promotional') {
+        el.placeholder = "Numbers only (0–9)";
+        el.oninput = () => el.value = el.value.replace(/[^0-9]/g, '');
+    } else {
+        el.placeholder = "Letters or numbers";
+        el.oninput = () => el.value = el.value.replace(/[^A-Za-z0-9]/g, '');
+    }
+}
+
+/* ── Edit modal ── */
+function openEditModal(id) {
+    Swal.fire({ title:'Loading…', allowOutsideClick:false, didOpen:() => Swal.showLoading() });
+    fetch(`/senders/get/${id}/`)
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(data => { Swal.close(); if (data.error) { showError(data.error); return; } createEditModal(data); })
+        .catch(() => { Swal.close(); showError('Failed to load sender data.'); });
+}
+
+function createEditModal(d) {
+    const mid = `editModal${d.sender_id}`;
+    const fid = `editForm${d.sender_id}`;
+    document.getElementById('editModalContainer').innerHTML = `
+        <div class="modal fade" id="${mid}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-pen me-2"></i>Edit Sender</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="${fid}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">User</label>
+                                <input type="text" class="form-control" value="${d.user_name || ''}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Sender ID</label>
+                                <input type="text" name="sender_name" class="form-control edit-sender-name"
+                                       value="${d.sender_name}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">PE ID <span style="font-weight:400;text-transform:none;font-size:0.78rem;">(numbers only, optional)</span></label>
+                                <input type="text" name="peid" class="form-control edit-peid"
+                                       value="${d.peid || ''}"
+                                       oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="active_flag"
+                                       id="editFlag${d.sender_id}" ${d.active_flag ? 'checked' : ''}>
+                                <label class="form-check-label" for="editFlag${d.sender_id}"
+                                       style="color:var(--text-main);font-weight:500;">Active</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-outline-theme" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn-theme"><i class="fas fa-save me-1"></i> Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>`;
+
+    const modalEl = document.getElementById(mid);
+    const modal   = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    const nameInput = modalEl.querySelector('.edit-sender-name');
+    setupInputRestriction(nameInput, d.account_type);
+
+    document.getElementById(fid).addEventListener('submit', function (e) {
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const peid = modalEl.querySelector('.edit-peid').value.trim();
+        const active = modalEl.querySelector(`#editFlag${d.sender_id}`).checked;
+        if (!validateSenderName(name, d.account_type) || !validatePeid(peid)) return;
+
+        Swal.fire({ title:'Saving…', allowOutsideClick:false, didOpen:() => Swal.showLoading() });
+        const fd = new FormData();
+        fd.append('sender_name', name);
+        fd.append('peid', peid);
+        fd.append('active_flag', active ? 'on' : '');
+        fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch(`/senders/edit/${d.sender_id}/`, { method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'} })
+            .then(r => r.json())
+            .then(data => { Swal.close(); data.success ? (modal.hide(), showSuccess(data.message)) : showError(data.message || 'Update failed.'); })
+            .catch(() => { Swal.close(); showError('Failed to update sender.'); });
+    });
+}
+
+/* ── Django messages ── */
+document.addEventListener('DOMContentLoaded', function () {
+    {% if sender_messages %}
+        {% for m in sender_messages %}
+            {% if m.level == 40 %}showError("{{ m.message|safe }}");
+            {% elif m.level == 25 %}showSuccess("{{ m.message|safe }}");
+            {% elif m.level == 30 %}showWarning("{{ m.message|safe }}");
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    /* Add form setup */
+    const addNameInput = document.getElementById('addSenderName');
+    if (addNameInput) {
+        setupInputRestriction(addNameInput);
+        document.getElementById('addSenderForm').addEventListener('submit', function (e) {
+            const name = addNameInput.value.trim();
+            const peid = document.getElementById('addPeid').value.trim();
+            if (!validateSenderName(name) || !validatePeid(peid)) { e.preventDefault(); }
+        });
+    }
+
+    /* Import form setup */
+    const importForm = document.getElementById('importForm');
+    if (importForm) {
+        importForm.addEventListener('submit', function (e) {
+            const fi = this.querySelector('input[name="excel_file"]');
+            if (!fi.files.length) { e.preventDefault(); showError("Please select a file."); return; }
+            const ext = fi.files[0].name.split('.').pop().toLowerCase();
+            if (!['xlsx','xls','csv'].includes(ext)) {
+                e.preventDefault(); showError("Upload only .xlsx, .xls or .csv files."); fi.value='';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,475 @@
+{% extends 'base.html' %}
+{% block title %}SMS Summary{% endblock %}
+
+{% block content %}
+<style>
+  /* ===== Container ===== */
+  .container-dashboard {
+    max-width: 1400px;
+    margin: 30px auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 0 20px;
+  }
+
+  h2 {
+    color: #FF7F50;
+    margin-bottom: 25px;
+  }
+
+  /* ===== Filter Section ===== */
+  .filter-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+  }
+
+  .filter-group {
+    flex: 1 1 200px;
+  }
+
+  .filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+    font-size: 0.9rem;
+  }
+
+  .filter-group input,
+  .filter-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 0.95rem;
+  }
+
+  .filter-group input:focus,
+  .filter-group select:focus {
+    outline: none;
+    border-color: #FF7F50;
+    box-shadow: 0 0 0 2px rgba(255,127,80,0.2);
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn-filter {
+    background: #FF7F50;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s;
+  }
+
+  .btn-filter:hover {
+    background: #ff6b3d;
+  }
+
+  .btn-reset {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-reset:hover {
+    background: #5a6268;
+    color: white;
+  }
+
+  /* ===== Summary Boxes ===== */
+  .summary-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+
+  .summary-card {
+    flex: 1 1 200px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+    text-decoration: none;
+  }
+
+  .summary-card:hover {
+    transform: translateY(-5px);
+    border-color: #FF7F50;
+  }
+
+  .summary-card.active {
+    border-color: #FF7F50;
+    box-shadow: 0 4px 20px rgba(255,127,80,0.3);
+  }
+
+  .summary-card i {
+    font-size: 2.5rem;
+    margin-right: 15px;
+  }
+
+  .summary-card h5 {
+    margin: 0;
+    font-weight: 500;
+    color: #555;
+  }
+
+  .summary-card h3 {
+    margin: 5px 0 0;
+    font-weight: bold;
+  }
+
+  .bg-success { color: #fff; background: #28a745; }
+  .bg-danger { color: #fff; background: #dc3545; }
+  .bg-warning { color: #000; background: #ffc107; }
+  .bg-info { color: #fff; background: #17a2b8; }
+  .bg-secondary { color: #fff; background: #6c757d; }
+
+  /* ===== Table Section ===== */
+  .table-section {
+    background: #fff;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-top: 30px;
+    overflow-x: auto;
+  }
+
+  .table-section h4 {
+    margin-bottom: 20px;
+    color: #FF7F50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .record-count {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: normal;
+  }
+
+  .sms-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .sms-table th {
+    background: #f8f9fa;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+  }
+
+  .sms-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #dee2e6;
+    color: #212529;
+  }
+
+  .sms-table tbody tr:hover {
+    background: #f8f9fa;
+  }
+
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .status-delivered { background: #d4edda; color: #155724; }
+  .status-submitted { background: #cce5ff; color: #004085; }
+  .status-pending { background: #fff3cd; color: #856404; }
+  .status-failed { background: #f8d7da; color: #721c24; }
+
+  .no-data {
+    text-align: center;
+    padding: 40px !important;
+    color: #6c757d;
+    font-style: italic;
+  }
+
+  /* ===== Charts Row ===== */
+  .charts-row {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+  }
+
+  .chart-container {
+    flex: 1 1 400px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+  .chart-container h4 {
+    color: #FF7F50;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+  }
+
+  canvas {
+    max-height: 250px;
+    width: 100% !important;
+  }
+</style>
+
+<div class="container-dashboard">
+  <h2>SMS Summary Dashboard</h2>
+
+  <!-- ===== Filter Section ===== -->
+  <div class="filter-section">
+    <form method="GET" action="">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Status</label>
+          <select name="status">
+            <option value="">All Status</option>
+            {% for status in status_choices %}
+              <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Date From</label>
+          <input type="date" name="date_from" value="{{ filters.date_from }}">
+        </div>
+        
+        <div class="filter-group">
+          <label>Date To</label>
+          <input type="date" name="date_to" value="{{ filters.date_to }}">
+        </div>
+        
+        <div class="filter-group">
+          <label>Message ID</label>
+          <input type="text" name="message_id" placeholder="Search Message ID" value="{{ filters.message_id }}">
+        </div>
+        
+        <div class="filter-group">
+          <label>Mobile Number</label>
+          <input type="text" name="mobile" placeholder="Enter Mobile" value="{{ filters.mobile }}">
+        </div>
+        
+        <div class="filter-group">
+          <label>User ID</label>
+          <input type="text" name="user_id" placeholder="User ID" value="{{ filters.user_id }}">
+        </div>
+        
+        <div class="filter-actions">
+          <button type="submit" class="btn-filter">Apply Filters</button>
+          <a href="{% url 'sms_summary' %}" class="btn-reset">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===== Summary Cards (Clickable) ===== -->
+  <div class="summary-row">
+    <a href="?" class="summary-card bg-secondary {% if not filters.status %}active{% endif %}" style="text-decoration: none;">
+      <i class="fas fa-envelope"></i>
+      <div>
+        <h5>Total Messages</h5>
+        <h3>{{ total_all }}</h3>
+      </div>
+    </a>
+
+    <a href="?status=DELIVRD" class="summary-card bg-success {% if filters.status == 'DELIVRD' %}active{% endif %}" style="text-decoration: none;">
+      <i class="fas fa-check-circle"></i>
+      <div>
+        <h5>Delivered</h5>
+        <h3>{{ total_delivered }}</h3>
+      </div>
+    </a>
+
+    <a href="?status=FAILED" class="summary-card bg-danger {% if filters.status == 'FAILED' or filters.status == 'UNDELIVERED' %}active{% endif %}" style="text-decoration: none;">
+      <i class="fas fa-times-circle"></i>
+      <div>
+        <h5>Failed / Undelivered</h5>
+        <h3>{{ total_failed }}</h3>
+      </div>
+    </a>
+
+    <a href="?status=PENDING" class="summary-card bg-warning {% if filters.status == 'PENDING' %}active{% endif %}" style="text-decoration: none;">
+      <i class="fas fa-clock"></i>
+      <div>
+        <h5>Pending</h5>
+        <h3>{{ total_pending }}</h3>
+      </div>
+    </a>
+
+    <a href="?status=SUBMITTED" class="summary-card bg-info {% if filters.status == 'SUBMITTED' %}active{% endif %}" style="text-decoration: none;">
+      <i class="fas fa-paper-plane"></i>
+      <div>
+        <h5>Submitted</h5>
+        <h3>{{ total_submitted }}</h3>
+      </div>
+    </a>
+  </div>
+
+  <!-- ===== Charts Section ===== -->
+  <div class="charts-row">
+    <div class="chart-container">
+      <h4>Status Distribution</h4>
+      <canvas id="pieChart"></canvas>
+    </div>
+    
+    <div class="chart-container">
+      <h4>Status Overview</h4>
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ===== Data Table ===== -->
+  <div class="table-section">
+    <h4>
+      Message Details
+      <span class="record-count">Showing last 100 records • Total: {{ total_all }}</span>
+    </h4>
+    
+    <table class="sms-table">
+      <thead>
+        <tr>
+          <th>Message ID</th>
+          <th>User ID</th>
+          <th>Send Type</th>
+          <th>Template ID</th>
+          <th>Mobile Number</th>
+          <th>Sender</th>
+          <th>Submit Time</th>
+          <th>DLR Time</th>
+          <th>Encoding</th>
+          <th>Status</th>
+          <th>Reason/Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+        <tr>
+          <td>{{ line.message_id|default:"-"|truncatechars:15 }}</td>
+          <td>{{ line.compose_message.user_id|default:"-" }}</td>
+          <td>{{ line.compose_message.send_type|default:"-" }}</td>
+          <td>{{ line.compose_message.template_id|default:"-" }}</td>
+          <td>{{ line.mobile_number|default:"-" }}</td>
+          <td>{{ line.sender|default:"-" }}</td>
+          <td>{{ line.submit_time|date:"Y-m-d H:i:s"|default:"-" }}</td>
+          <td>{{ line.dlr_time|date:"Y-m-d H:i:s"|default:"-" }}</td>
+          <td>{{ line.encoding|default:"-" }}</td>
+          <td>
+            {% with status=line.status|upper %}
+              {% if status in delivered_status %}
+                <span class="status-badge status-delivered">{{ line.status }}</span>
+              {% elif status in submitted_status %}
+                <span class="status-badge status-submitted">{{ line.status }}</span>
+              {% elif status in pending_status %}
+                <span class="status-badge status-pending">{{ line.status }}</span>
+              {% else %}
+                <span class="status-badge status-failed">{{ line.status }}</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td>{{ line.reason|default:line.masked_reason|default:"-"|truncatechars:30 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="11" class="no-data">No messages found matching the criteria</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== Chart.js ===== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const statusLabels = ['Delivered', 'Failed/Undelivered', 'Pending', 'Submitted'];
+  const statusData = [{{ total_delivered }}, {{ total_failed }}, {{ total_pending }}, {{ total_submitted }}];
+  const statusColors = ['#28a745', '#dc3545', '#ffc107', '#17a2b8'];
+
+  // ===== Pie Chart =====
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: statusLabels,
+      datasets: [{
+        data: statusData,
+        backgroundColor: statusColors,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+
+  // ===== Bar Chart =====
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: statusLabels,
+      datasets: [{
+        label: 'Number of Messages',
+        data: statusData,
+        backgroundColor: statusColors,
+        borderRadius: 5,
+        barPercentage: 0.6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { 
+          beginAtZero: true, 
+          stepSize: 1,
+          ticks: { precision: 0 }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

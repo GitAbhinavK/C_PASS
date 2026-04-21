@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - SMS Portal{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h4>Dashboard</h4>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="cards">
+        <!-- Total Users Card — hidden for Client role -->
+        {% if show_users_card %}
+        <div class="card">
+            <div class="card-content">
+                <div class="icon-circle">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-text">
+                    <h3>Total Users</h3>
+                    <p>{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SMS Sent Card -->
+        <div class="card">
+            <div class="card-content">
+                <div class="icon-circle">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <div class="card-text">
+                    <h3>SMS Sent</h3>
+                    <p>{{ sms_sent }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Campaigns Card -->
+        <div class="card">
+            <div class="card-content">
+                <div class="icon-circle">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div class="card-text">
+                    <h3>Pending Campaigns</h3>
+                    <p>{{ pending_campaigns }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Plans Card -->
+        <div class="card">
+            <div class="card-content">
+                <div class="icon-circle">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="card-text">
+                    <h3>Active Plans</h3>
+                    <p>{{ active_plans }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example Chart -->
+    <div class="chart-container">
+        <canvas id="smsChart" height="100"></canvas>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+    // Chart.js line chart
+    const ctx = document.getElementById('smsChart').getContext('2d');
+    const smsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+            datasets: [{
+                label: 'SMS Sent per Month',
+                data: [0, 0, 0, 0, 0, {{ sms_sent }}],
+                backgroundColor: 'rgba(255,102,0,0.2)',
+                borderColor: 'rgba(255,102,0,1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true, position: 'top' } }
+        }
+    });
+</script>
+{% endblock %}

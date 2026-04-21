@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2>Create SMPP Hash</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- USER LOV -->
+        <div class="mb-3">
+            <label>Select User</label>
+            <select name="user_id" class="form-control" required>
+                <option value="">Select User</option>
+                {% for user in users %}
+                    <option value="{{ user.user_id }}">
+                        {{ user.username }} ({{ user.company.name }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- TYPE -->
+        <div class="mb-3">
+            <label>Type</label>
+            <select name="type" id="typeSelect" class="form-control" required onchange="toggleFields()">
+                <option value="">Select Type</option>
+                <option value="ON">ON</option>
+                <option value="OFF">OFF</option>
+            </select>
+        </div>
+
+        <!-- ON Fields -->
+        <div id="onFields" style="display:none;">
+            <div class="mb-3">
+                <label>Entity ID</label>
+                <input type="text" name="entity_id" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Template ID</label>
+                <input type="text" name="template_id" class="form-control">
+            </div>
+        </div>
+
+        <!-- OFF Fields -->
+        <div id="offFields" style="display:none;">
+            <div class="mb-3">
+                <label>Provider</label>
+                <input type="text" name="provider" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Packet TM ID</label>
+                <input type="text" name="packet_tm_id" class="form-control">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Generate Hash</button>
+    </form>
+</div>
+
+<script>
+function toggleFields() {
+    var type = document.getElementById("typeSelect").value;
+    document.getElementById("onFields").style.display = type === "ON" ? "block" : "none";
+    document.getElementById("offFields").style.display = type === "OFF" ? "block" : "none";
+}
+</script>
+
+{% endblock %}

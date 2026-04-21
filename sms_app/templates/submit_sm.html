@@ -1,0 +1,1399 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Compose Message{% endblock %}
+
+{% block content %}
+<style>
+/* ============================================================
+   SUBMIT SM — uses base.html CSS variable system for dark mode
+   ============================================================ */
+
+/* Override page-container for this page */
+.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px var(--shadow-color);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    animation: fadeInUp 0.4s ease-out;
+}
+
+/* ---- Layout ---- */
+.content-box {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+.left-card  { flex: 0 0 68%; }
+.right-card { flex: 1; }
+
+/* ---- Cards ---- */
+.sms-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 12px var(--shadow-color);
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+}
+
+.sms-card-header {
+    background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+    color: white;
+    padding: 14px 20px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sms-card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+}
+
+.sms-card-header i {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.9);
+}
+
+.sms-card-body {
+    padding: 20px;
+    flex: 1;
+}
+
+/* ---- Form ---- */
+.form-grid     { display: flex; flex-direction: column; gap: 16px; }
+.form-row      { display: flex; gap: 16px; }
+.form-group    { flex: 1; display: flex; flex-direction: column; }
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.form-label i { color: var(--theme-color); margin-right: 5px; }
+
+.form-control,
+.form-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--theme-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255,102,0,0.12);
+}
+
+.form-control[readonly] {
+    background: var(--hover-color);
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+.form-hint {
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+textarea.form-control { resize: vertical; }
+
+/* ---- Action buttons ---- */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 8px;
+}
+
+.btn-theme-solid {
+    background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+    color: white;
+    border: none;
+    padding: 9px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.25s;
+    box-shadow: 0 3px 10px rgba(255,102,0,0.25);
+}
+
+.btn-theme-solid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255,102,0,0.35);
+}
+
+.btn-secondary-flat {
+    background: var(--hover-color);
+    color: var(--text-primary);
+    border: 1.5px solid var(--border-color);
+    padding: 9px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.25s;
+}
+
+.btn-secondary-flat:hover {
+    border-color: var(--theme-color);
+    color: var(--theme-color);
+    transform: translateY(-1px);
+}
+
+/* ---- Custom Dropdown ---- */
+.custom-dropdown { position: relative; }
+
+.dropdown-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    text-align: left;
+}
+
+.dropdown-trigger:hover,
+.dropdown-trigger:focus {
+    border-color: var(--theme-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255,102,0,0.1);
+}
+
+.dropdown-trigger .selected-option {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.dropdown-trigger i.chevron {
+    margin-left: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transition: transform 0.25s;
+    flex-shrink: 0;
+}
+
+.dropdown-trigger[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: var(--hover-color);
+}
+
+.dd-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px var(--shadow-color);
+    z-index: 1050;
+    display: none;
+    flex-direction: column;
+    max-height: 300px;
+    overflow: hidden;
+}
+
+.dd-menu.show { display: flex; }
+
+.dd-search {
+    position: relative;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.dd-search i {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.dd-search .search-input {
+    padding-left: 34px;
+    padding-right: 30px;
+    height: 34px;
+    font-size: 0.85rem;
+}
+
+.dd-search .search-clear {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 2px;
+    display: none;
+}
+
+.dd-items { overflow-y: auto; flex: 1; }
+
+.dd-item {
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.15s, color 0.15s;
+}
+
+.dd-item:last-child { border-bottom: none; }
+
+.dd-item:hover {
+    background: var(--theme-light);
+    color: var(--theme-color);
+}
+
+.dd-item small { color: var(--text-muted); margin-left: 6px; }
+
+.dd-no-results {
+    padding: 18px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* ---- Settings Panel (right card) ---- */
+.settings-section {
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+.settings-section h5 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--theme-color);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Radio option tiles */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.setting-option input[type="radio"] { display: none; }
+
+.setting-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 8px;
+    background: var(--hover-color);
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.setting-option label i {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.setting-option label span { font-weight: 600; color: var(--text-primary); font-size: 0.82rem; }
+.setting-option label small { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+.setting-option input[type="radio"]:checked + label {
+    background: var(--theme-light);
+    border-color: var(--theme-color);
+    color: var(--theme-color);
+}
+
+.setting-option input[type="radio"]:checked + label i,
+.setting-option input[type="radio"]:checked + label span { color: var(--theme-color); }
+
+/* Toggle items */
+.toggle-settings { display: flex; flex-direction: column; gap: 10px; }
+
+.toggle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--hover-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.toggle-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.toggle-info > i { color: var(--theme-color); font-size: 0.95rem; flex-shrink: 0; }
+
+.toggle-info div { display: flex; flex-direction: column; }
+.toggle-info span { font-weight: 600; font-size: 0.82rem; color: var(--text-primary); }
+.toggle-info small { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
+
+/* Toggle switch widget */
+.toggle-switch { display: inline-block; position: relative; flex-shrink: 0; }
+
+.toggle-switch input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.toggle-label {
+    display: block;
+    width: 44px;
+    height: 24px;
+    background: var(--border-color);
+    border-radius: 30px;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.3s;
+}
+
+.toggle-label.active { background: var(--theme-color); }
+
+.toggle-handle {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+.toggle-label.active .toggle-handle { transform: translateX(20px); }
+
+/* ---- Character / SMS info bar ---- */
+.msg-stats-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.msg-stats-bar small { font-size: 0.76rem; color: var(--text-muted); }
+.msg-stats-bar .parts-badge {
+    background: var(--theme-light);
+    color: var(--theme-color);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* ---- CSV Upload Modal ---- */
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.25s, background 0.25s;
+    background: var(--hover-color);
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    border-color: var(--theme-color);
+    background: var(--theme-light);
+}
+
+.upload-area .upload-icon { color: var(--theme-color); margin-bottom: 12px; }
+.upload-area h5 { color: var(--text-primary); font-size: 0.95rem; }
+.upload-area p  { color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0; }
+
+.instructions {
+    background: var(--hover-color);
+    border-left: 3px solid var(--theme-color);
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.instructions h6 { color: var(--theme-color); font-size: 0.82rem; margin-bottom: 6px; }
+.instructions ul { margin: 0; padding-left: 18px; }
+.instructions li { margin-bottom: 3px; }
+
+.file-info {
+    background: var(--hover-color);
+    border: 1px solid var(--border-color);
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.file-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.file-stats {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.column-selector {
+    background: var(--hover-color);
+    border: 1px solid var(--border-color);
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+/* Override Bootstrap modal for dark mode */
+.dark-mode .modal-content {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.dark-mode .modal-header {
+    background: var(--hover-color);
+    border-bottom-color: var(--border-color);
+}
+
+.dark-mode .modal-footer {
+    border-top-color: var(--border-color);
+    background: var(--hover-color);
+}
+
+.dark-mode .modal-title { color: var(--theme-color); }
+
+.dark-mode .btn-close { filter: invert(1); }
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .content-box { flex-direction: column; padding: 14px; }
+    .left-card, .right-card { flex: unset; width: 100%; }
+}
+
+@media (max-width: 768px) {
+    .form-row { flex-direction: column; }
+    .settings-grid { grid-template-columns: repeat(3, 1fr); }
+    .dd-menu {
+        position: fixed;
+        top: auto !important;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        max-height: 50vh;
+        border-radius: 12px;
+    }
+}
+</style>
+
+<div class="page-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h4 style="margin:0;font-weight:700;">Compose Message</h4>
+            <p class="subtitle" style="margin:4px 0 0;">Send SMS to single or multiple recipients</p>
+        </div>
+    </div>
+
+    <!-- CSV Upload Modal -->
+    <div class="modal fade" id="csvUploadModal" tabindex="-1" aria-labelledby="csvUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="csvUploadModalLabel">
+                        <i class="fas fa-file-csv me-2" style="color:var(--theme-color);"></i>Upload CSV / Excel
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt fa-3x"></i></div>
+                        <h5>Drag & Drop your file here</h5>
+                        <p>or click to browse</p>
+                        <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" hidden>
+                        <button type="button" class="btn-theme-solid mt-3" id="browseBtn">
+                            <i class="fas fa-folder-open"></i>Browse Files
+                        </button>
+                        <div class="file-info d-none" id="fileInfo">
+                            <div class="file-details">
+                                <span><i class="fas fa-file-excel text-success me-2"></i><span id="fileName">No file selected</span></span>
+                                <button type="button" class="btn-close btn-sm" id="removeFileBtn"></button>
+                            </div>
+                            <div class="file-stats" id="fileStats"></div>
+                        </div>
+                    </div>
+
+                    <div class="instructions mt-3">
+                        <h6><i class="fas fa-info-circle me-1"></i>File Requirements</h6>
+                        <ul>
+                            <li>Supported: CSV, XLSX, XLS</li>
+                            <li>Column with mobile numbers required</li>
+                            <li>First row treated as header</li>
+                            <li>Maximum file size: 10 MB</li>
+                        </ul>
+                    </div>
+
+                    <div class="column-selector d-none" id="columnSelector">
+                        <label class="form-label"><i class="fas fa-columns"></i>Column with mobile numbers</label>
+                        <select class="form-select" id="columnSelect">
+                            <option value="">-- Select Column --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-flat" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>Cancel
+                    </button>
+                    <button type="button" class="btn-theme-solid" id="processCsvBtn" disabled>
+                        <i class="fas fa-upload"></i>Process File
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content area -->
+    <div class="content-box">
+
+        <!-- LEFT: SMS Configuration -->
+        <div class="left-card">
+            <div class="sms-card">
+                <div class="sms-card-header">
+                    <i class="fas fa-sms"></i>
+                    <h3>SMS Configuration</h3>
+                </div>
+                <div class="sms-card-body">
+                    <form method="POST" id="smppForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="remove_duplicates" id="removeDuplicatesHidden" value="enable">
+                        <input type="hidden" name="smart_link"        id="smartLinkHidden"       value="disable">
+                        <input type="hidden" name="flash_message"     id="flashMessageHidden"    value="disable">
+
+                        <div class="form-grid">
+                            <!-- SMPP Connection -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-plug"></i>SMPP Connection</label>
+                                <select class="form-select" id="smppSelect" name="smpp_id" required>
+                                    <option value="">-- Select Connection --</option>
+                                    {% for connection in connections %}
+                                    <option value="{{ connection.smpp_id }}" data-tmid="{{ connection.dlt_telemarketer_id|default:'' }}">
+                                        {{ connection.connect_name }} ({{ connection.ip }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Sender ID -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-user-tag"></i>Sender ID</label>
+                                <div class="custom-dropdown" id="senderDdWrapper">
+                                    <button type="button" class="dropdown-trigger" id="senderDropdownBtn">
+                                        <span class="selected-option">-- Select Sender --</span>
+                                        <i class="fas fa-chevron-down chevron"></i>
+                                    </button>
+                                    <div class="dd-menu" id="senderDropdownMenu">
+                                        <div class="dd-search">
+                                            <i class="fas fa-search"></i>
+                                            <input type="text" class="form-control search-input" placeholder="Search senders…" id="senderSearch">
+                                            <button type="button" class="search-clear" id="senderClear">✕</button>
+                                        </div>
+                                        <div class="dd-items" id="senderItems">
+                                            {% for sender in senders %}
+                                            <div class="dd-item" data-value="{{ sender.sender_id }}" data-label="{{ sender.sender_name }}" data-peid="{{ sender.peid|default:'' }}">
+                                                {{ sender.sender_name }}
+                                                {% if sender.peid %}<small>(PE: {{ sender.peid }})</small>{% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="dd-no-results" id="senderNoResults" style="display:none;">No results found</div>
+                                    </div>
+                                    <input type="hidden" name="sender_name" id="senderHiddenInput" value="">
+                                </div>
+                            </div>
+
+                            <!-- PE ID + Template -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-id-card"></i>PE ID</label>
+                                    <input type="text" class="form-control" id="peidInput" name="peid" readonly placeholder="Auto-filled">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-file-alt"></i>Template</label>
+                                    <div class="custom-dropdown" id="templateDdWrapper">
+                                        <button type="button" class="dropdown-trigger" id="templateDropdownBtn" disabled>
+                                            <span class="selected-option">-- Select Template --</span>
+                                            <i class="fas fa-chevron-down chevron"></i>
+                                        </button>
+                                        <div class="dd-menu" id="templateDropdownMenu">
+                                            <div class="dd-search">
+                                                <i class="fas fa-search"></i>
+                                                <input type="text" class="form-control search-input" placeholder="Search templates…" id="templateSearch" disabled>
+                                                <button type="button" class="search-clear" id="templateClear">✕</button>
+                                            </div>
+                                            <div class="dd-items" id="templateItems"></div>
+                                            <div class="dd-no-results" id="templateNoResults" style="display:none;">No results found</div>
+                                        </div>
+                                        <input type="hidden" name="template_identifier" id="templateHiddenInput" value="">
+                                    </div>
+                                    <span class="form-hint">Auto-fills message content</span>
+                                </div>
+                            </div>
+
+                            <!-- Template ID -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-hashtag"></i>Template ID</label>
+                                <input type="text" class="form-control" id="template_id_display" name="template_id" readonly placeholder="Auto-filled from Template">
+                            </div>
+
+                            <!-- Mobile Numbers -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-mobile-alt"></i>Mobile Numbers
+                                    <span class="ms-2" style="background:var(--theme-light);color:var(--theme-color);font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:700;display:none;" id="csvCountBadge">0 from CSV</span>
+                                </label>
+                                <textarea name="mobile_numbers" class="form-control" rows="3"
+                                          placeholder="Enter numbers separated by commas, spaces, or new lines"
+                                          required id="mobileNumbersField"></textarea>
+                                <div class="msg-stats-bar">
+                                    <small>Separate by comma / space / newline</small>
+                                    <small>Total: <strong id="totalNumbersCount">0</strong>
+                                        <span id="csvInfo" style="display:none;margin-left:6px;">
+                                            <i class="fas fa-file-excel text-success"></i> <span id="csvNumbersCount">0</span> from CSV
+                                        </span>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Message -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-comment-dots"></i>Message</label>
+                                <textarea class="form-control" id="messageContent" name="message" rows="4"
+                                          placeholder="Enter your message here…" required></textarea>
+                                <div class="msg-stats-bar">
+                                    <small>Characters: <strong id="charCount">0</strong><span id="charLimit">/160</span></small>
+                                    <span class="parts-badge" id="encodingInfo">English · 1 part</span>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="form-actions">
+                                <button type="reset" class="btn-secondary-flat" id="resetBtn">
+                                    <i class="fas fa-redo"></i>Clear
+                                </button>
+                                <button type="submit" class="btn-theme-solid" id="submitBtn">
+                                    <i class="fas fa-paper-plane"></i>Send SMS
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Quick Settings -->
+        <div class="right-card">
+            <div class="sms-card">
+                <div class="sms-card-header">
+                    <i class="fas fa-sliders-h"></i>
+                    <h3>Quick Settings</h3>
+                </div>
+                <div class="sms-card-body">
+
+                    <!-- Language -->
+                    <div class="settings-section">
+                        <h5><i class="fas fa-language"></i>Language</h5>
+                        <div class="settings-grid">
+                            <div class="setting-option">
+                                <input type="radio" name="text_type" id="langEnglish" value="english" checked>
+                                <label for="langEnglish">
+                                    <i class="fas fa-globe-americas"></i>
+                                    <span>English</span>
+                                    <small>160 chars/SMS</small>
+                                </label>
+                            </div>
+                            <div class="setting-option">
+                                <input type="radio" name="text_type" id="langUnicode" value="unicode">
+                                <label for="langUnicode">
+                                    <i class="fas fa-font"></i>
+                                    <span>Unicode</span>
+                                    <small>70 chars/SMS</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send Type -->
+                    <div class="settings-section">
+                        <h5><i class="fas fa-share-square"></i>Send Type</h5>
+                        <div class="settings-grid" style="grid-template-columns:repeat(3,1fr);">
+                            <div class="setting-option">
+                                <input type="radio" name="send_type" id="sendBatch" value="batch" checked>
+                                <label for="sendBatch">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Batch</span>
+                                    <small>List</small>
+                                </label>
+                            </div>
+                            <div class="setting-option">
+                                <input type="radio" name="send_type" id="sendGroup" value="group">
+                                <label for="sendGroup">
+                                    <i class="fas fa-users"></i>
+                                    <span>Group</span>
+                                    <small>Group</small>
+                                </label>
+                            </div>
+                            <div class="setting-option">
+                                <input type="radio" name="send_type" id="sendCSV" value="csv">
+                                <label for="sendCSV">
+                                    <i class="fas fa-file-csv"></i>
+                                    <span>CSV</span>
+                                    <small>Upload</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options Toggles -->
+                    <div class="settings-section">
+                        <h5><i class="fas fa-toggle-on"></i>Options</h5>
+                        <div class="toggle-settings">
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <i class="fas fa-filter"></i>
+                                    <div>
+                                        <span>Remove Duplicates</span>
+                                        <small>Filter duplicate numbers</small>
+                                    </div>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="removeDuplicates" checked>
+                                    <label for="removeDuplicates" class="toggle-label active"><span class="toggle-handle"></span></label>
+                                </div>
+                            </div>
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <i class="fas fa-link"></i>
+                                    <div>
+                                        <span>Smart Link</span>
+                                        <small>Add clickable link</small>
+                                    </div>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="smartLink">
+                                    <label for="smartLink" class="toggle-label"><span class="toggle-handle"></span></label>
+                                </div>
+                            </div>
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <i class="fas fa-bolt"></i>
+                                    <div>
+                                        <span>Flash Message</span>
+                                        <small>Appears on screen directly</small>
+                                    </div>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flashMessage">
+                                    <label for="flashMessage" class="toggle-label"><span class="toggle-handle"></span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Smart Link URL -->
+                    <div class="settings-section d-none" id="smartLinkUrlSection">
+                        <h5><i class="fas fa-link"></i>Smart Link URL</h5>
+                        <input type="url" class="form-control" name="smart_link_url" placeholder="https://example.com">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div><!-- /.content-box -->
+</div><!-- /.page-container -->
+
+<!-- External libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+/* =====================================================================
+   SUBMIT SM — JavaScript
+   ===================================================================== */
+
+// DOM refs
+const messageTA       = document.getElementById('messageContent');
+const mobileTA        = document.getElementById('mobileNumbersField');
+const charCountEl     = document.getElementById('charCount');
+const charLimitEl     = document.getElementById('charLimit');
+const encodingInfoEl  = document.getElementById('encodingInfo');
+let csvNumbers        = [];
+
+// CSV modal refs
+const csvModalElement = document.getElementById('csvUploadModal');
+const csvModal        = (typeof bootstrap !== 'undefined' && bootstrap.Modal && csvModalElement)
+    ? new bootstrap.Modal(csvModalElement)
+    : null;
+const csvFileInput    = document.getElementById('csvFileInput');
+const browseBtn       = document.getElementById('browseBtn');
+const uploadArea      = document.getElementById('uploadArea');
+const fileInfo        = document.getElementById('fileInfo');
+const fileName        = document.getElementById('fileName');
+const removeFileBtn   = document.getElementById('removeFileBtn');
+const processCsvBtn   = document.getElementById('processCsvBtn');
+const columnSelector  = document.getElementById('columnSelector');
+const columnSelect    = document.getElementById('columnSelect');
+const fileStats       = document.getElementById('fileStats');
+
+// Dropdown refs
+const senderBtn       = document.getElementById('senderDropdownBtn');
+const senderMenu      = document.getElementById('senderDropdownMenu');
+const senderSearch    = document.getElementById('senderSearch');
+const senderClear     = document.getElementById('senderClear');
+const senderItems     = document.getElementById('senderItems');
+const senderNoRes     = document.getElementById('senderNoResults');
+const senderHidden    = document.getElementById('senderHiddenInput');
+
+const templateBtn     = document.getElementById('templateDropdownBtn');
+const templateMenu    = document.getElementById('templateDropdownMenu');
+const templateSearch  = document.getElementById('templateSearch');
+const templateClear   = document.getElementById('templateClear');
+const templateItems   = document.getElementById('templateItems');
+const templateNoRes   = document.getElementById('templateNoResults');
+const templateHidden  = document.getElementById('templateHiddenInput');
+
+
+// ── Message stats ────────────────────────────────────────────────────
+function updateMessageStats() {
+    const textType    = document.querySelector('input[name="text_type"]:checked')?.value || 'english';
+    const limit       = textType === 'english' ? 160 : 70;
+    const len         = messageTA.value.length;
+    const parts       = Math.max(1, Math.ceil(len / limit));
+
+    charCountEl.textContent   = len;
+    charLimitEl.textContent   = `/${limit}`;
+    encodingInfoEl.textContent = `${textType === 'english' ? 'English' : 'Unicode'} · ${parts} part${parts > 1 ? 's' : ''}`;
+    updateNumberStats();
+}
+
+function updateNumberStats() {
+    const removeDup = document.getElementById('removeDuplicates').checked;
+    let nums = [];
+
+    const rawText = mobileTA.value.trim();
+    if (rawText) nums.push(...rawText.split(/[\s,]+/).filter(Boolean));
+    if (csvNumbers.length) nums.push(...csvNumbers);
+    if (removeDup) nums = [...new Set(nums)];
+
+    document.getElementById('totalNumbersCount').textContent = nums.length;
+
+    const csvBadge = document.getElementById('csvCountBadge');
+    const csvInfo  = document.getElementById('csvInfo');
+    if (csvNumbers.length) {
+        csvBadge.style.display = 'inline';
+        csvBadge.textContent   = `${csvNumbers.length} from CSV`;
+        csvInfo.style.display  = 'inline';
+        document.getElementById('csvNumbersCount').textContent = csvNumbers.length;
+    } else {
+        csvBadge.style.display = 'none';
+        csvInfo.style.display  = 'none';
+    }
+}
+
+messageTA.addEventListener('input', updateMessageStats);
+mobileTA.addEventListener('input', updateNumberStats);
+document.querySelectorAll('input[name="text_type"]').forEach(r => r.addEventListener('change', updateMessageStats));
+
+// ── CSV Upload ────────────────────────────────────────────────────────
+document.getElementById('sendCSV').addEventListener('change', function() {
+    if (this.checked) csvModal.show();
+});
+
+browseBtn.addEventListener('click', () => csvFileInput.click());
+
+csvFileInput.addEventListener('change', e => {
+    if (e.target.files.length) handleFileSelect(e.target.files[0]);
+});
+
+uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); });
+uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        csvFileInput.files = e.dataTransfer.files;
+        handleFileSelect(e.dataTransfer.files[0]);
+    }
+});
+
+function handleFileSelect(file) {
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!['.csv', '.xls', '.xlsx'].includes(ext)) {
+        Swal.fire({ icon:'error', title:'Invalid File', text:'Please upload CSV or Excel (.csv, .xls, .xlsx)', confirmButtonColor:'#ff6600' });
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        Swal.fire({ icon:'error', title:'File Too Large', text:'Max file size is 10 MB', confirmButtonColor:'#ff6600' });
+        return;
+    }
+    fileName.textContent = file.name;
+    fileInfo.classList.remove('d-none');
+    processCsvBtn.disabled = false;
+    readAndParseFile(file);
+}
+
+function readAndParseFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            let wb;
+            if (file.name.endsWith('.csv')) {
+                const rows = e.target.result.split('\n').map(r => r.split(','));
+                wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Sheet1');
+            } else {
+                wb = XLSX.read(e.target.result, { type:'binary' });
+            }
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const data  = XLSX.utils.sheet_to_json(sheet, { header:1 });
+            if (data.length) {
+                showColumnSelector(data[0]);
+                fileStats.innerHTML = `<i class="fas fa-table me-1"></i>${data.length - 1} rows &nbsp; <i class="fas fa-columns me-1"></i>${data[0].length} cols`;
+            }
+        } catch(err) {
+            Swal.fire({ icon:'error', title:'Parse Error', text:'Could not parse the file.', confirmButtonColor:'#ff6600' });
+        }
+    };
+    file.name.endsWith('.csv') ? reader.readAsText(file) : reader.readAsBinaryString(file);
+}
+
+function showColumnSelector(headers) {
+    columnSelector.classList.remove('d-none');
+    columnSelect.innerHTML = '<option value="">-- Select Column --</option>';
+    headers.forEach((h, i) => {
+        const o = document.createElement('option');
+        o.value = i;
+        o.textContent = h || `Column ${i + 1}`;
+        columnSelect.appendChild(o);
+    });
+}
+
+removeFileBtn.addEventListener('click', () => {
+    csvFileInput.value = '';
+    fileInfo.classList.add('d-none');
+    columnSelector.classList.add('d-none');
+    processCsvBtn.disabled = true;
+});
+
+processCsvBtn.addEventListener('click', () => {
+    const colIdx = parseInt(columnSelect.value);
+    if (isNaN(colIdx)) {
+        Swal.fire({ icon:'warning', title:'Select Column', text:'Choose the column containing mobile numbers.', confirmButtonColor:'#ff6600' });
+        return;
+    }
+    const file   = csvFileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            let wb;
+            if (file.name.endsWith('.csv')) {
+                const rows = e.target.result.split('\n').map(r => r.split(','));
+                wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Sheet1');
+            } else {
+                wb = XLSX.read(e.target.result, { type:'binary' });
+            }
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const data  = XLSX.utils.sheet_to_json(sheet, { header:1 });
+            const nums  = [];
+            for (let i = 1; i < data.length; i++) {
+                const v = data[i][colIdx];
+                if (v) {
+                    const n = v.toString().replace(/\D/g, '').trim();
+                    if (n.length >= 10) nums.push(n);
+                }
+            }
+            csvNumbers = nums;
+            const existing = mobileTA.value.trim() ? mobileTA.value.trim().split(/[\s,]+/).filter(Boolean) : [];
+            const all = [...new Set([...existing, ...csvNumbers])];
+            mobileTA.value = all.join(', ');
+            Swal.fire({
+                icon:'success', title:'CSV Processed',
+                html:`Imported <b>${csvNumbers.length}</b> numbers.<br>Total: <b>${all.length}</b>`,
+                confirmButtonColor:'#ff6600', timer:3000, timerProgressBar:true
+            });
+            if (csvModal) {
+                csvModal.hide();
+            }
+            updateNumberStats();
+        } catch(err) {
+            Swal.fire({ icon:'error', title:'Processing Error', text:'Could not process the file.', confirmButtonColor:'#ff6600' });
+        }
+    };
+    file.name.endsWith('.csv') ? reader.readAsText(file) : reader.readAsBinaryString(file);
+});
+
+// ── Custom Dropdowns ──────────────────────────────────────────────────
+function setupDropdown(btn, menu, searchEl, clearEl, itemsEl, noResEl, hiddenEl) {
+    btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const opening = !menu.classList.contains('show');
+        closeAllDropdowns();
+        if (opening && !btn.disabled) {
+            menu.classList.add('show');
+            btn.querySelector('.chevron').classList.replace('fa-chevron-down', 'fa-chevron-up');
+            if (searchEl && !searchEl.disabled) searchEl.focus();
+        }
+    });
+
+    if (searchEl) {
+        searchEl.addEventListener('input', function() {
+            filterItems(itemsEl, noResEl, this.value.toLowerCase());
+            clearEl.style.display = this.value ? 'block' : 'none';
+        });
+        clearEl.addEventListener('click', () => {
+            searchEl.value = '';
+            filterItems(itemsEl, noResEl, '');
+            clearEl.style.display = 'none';
+            searchEl.focus();
+        });
+    }
+
+    itemsEl.addEventListener('click', e => {
+        const item = e.target.closest('.dd-item');
+        if (!item) return;
+        const val  = item.dataset.value;
+        const text = item.dataset.label || item.textContent.trim();
+        btn.querySelector('.selected-option').textContent = text;
+        hiddenEl.value = val;
+        menu.classList.remove('show');
+        btn.querySelector('.chevron').classList.replace('fa-chevron-up', 'fa-chevron-down');
+        hiddenEl.dispatchEvent(new Event('change'));
+    });
+}
+
+function closeAllDropdowns() {
+    document.querySelectorAll('.dd-menu.show').forEach(m => m.classList.remove('show'));
+    document.querySelectorAll('.dropdown-trigger .chevron').forEach(i => {
+        i.classList.replace('fa-chevron-up', 'fa-chevron-down');
+    });
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.custom-dropdown')) closeAllDropdowns();
+});
+
+function filterItems(container, noRes, term) {
+    let visible = 0;
+    container.querySelectorAll('.dd-item').forEach(item => {
+        const match = !term || item.textContent.toLowerCase().includes(term);
+        item.style.display = match ? '' : 'none';
+        if (match) visible++;
+    });
+    noRes.style.display = (visible === 0 && term) ? 'block' : 'none';
+}
+
+setupDropdown(senderBtn, senderMenu, senderSearch, senderClear, senderItems, senderNoRes, senderHidden);
+setupDropdown(templateBtn, templateMenu, templateSearch, templateClear, templateItems, templateNoRes, templateHidden);
+
+// ── Sender → load templates ───────────────────────────────────────────
+senderHidden.addEventListener('change', async function() {
+    const id = this.value;
+    const row = senderItems.querySelector(`.dd-item[data-value="${id}"]`);
+    if (row) {
+        document.getElementById('peidInput').value = row.dataset.peid || '';
+        await loadTemplates(id);
+    }
+});
+
+async function loadTemplates(senderId) {
+    if (!senderId) return;
+    try {
+        const res  = await fetch(`/ajax/get_templates_for_sender/?sender_id=${senderId}`);
+        const list = await res.json();
+        templateItems.innerHTML = '';
+
+        if (list.length) {
+            list.forEach(t => {
+                const div = document.createElement('div');
+                div.className         = 'dd-item';
+                div.dataset.value     = t.template_identifier;
+                div.dataset.dltId     = t.dlt_template_id   || '';
+                div.dataset.msgTpl    = t.message_template  || '';
+                div.textContent       = t.template_identifier;
+                templateItems.appendChild(div);
+            });
+            templateBtn.disabled    = false;
+            templateSearch.disabled = false;
+            const first = templateItems.querySelector('.dd-item');
+            if (first) first.click();
+        } else {
+            templateBtn.disabled    = true;
+            templateSearch.disabled = true;
+            templateBtn.querySelector('.selected-option').textContent = '-- No Templates --';
+            templateHidden.value = '';
+        }
+        templateSearch.value = '';
+        filterItems(templateItems, templateNoRes, '');
+    } catch(err) {
+        templateBtn.disabled = true;
+        templateBtn.querySelector('.selected-option').textContent = '-- Error Loading --';
+    }
+}
+
+// ── Template selection ────────────────────────────────────────────────
+templateHidden.addEventListener('change', function() {
+    const id = this.value;
+    if (!id) return;
+    // Find the matching item directly from the DOM (avoids stale-object issues)
+    const item = Array.from(templateItems.querySelectorAll('.dd-item'))
+                      .find(el => el.dataset.value === id);
+    if (item) {
+        document.getElementById('template_id_display').value = item.dataset.dltId || '';
+        if (item.dataset.msgTpl) {
+            messageTA.value = item.dataset.msgTpl;
+            updateMessageStats();
+        }
+    }
+});
+
+// ── SMPP → TMID (safe check) ──────────────────────────────────────────
+document.getElementById('smppSelect').addEventListener('change', function() {
+    const tmid     = this.selectedOptions[0]?.dataset.tmid || '';
+    const tmidEl   = document.getElementById('tmidInput');
+    if (tmidEl) tmidEl.value = tmid;
+});
+
+// ── Toggle switches ───────────────────────────────────────────────────
+function syncToggle(checkbox) {
+    const label     = checkbox.nextElementSibling;
+    const hiddenEl  = document.getElementById(checkbox.id + 'Hidden');
+    const active    = checkbox.checked;
+    label.classList.toggle('active', active);
+    if (hiddenEl) hiddenEl.value = active ? 'enable' : 'disable';
+
+    if (checkbox.id === 'smartLink') {
+        document.getElementById('smartLinkUrlSection').classList.toggle('d-none', !active);
+    }
+    updateNumberStats();
+}
+
+document.querySelectorAll('.toggle-label').forEach(label => {
+    label.addEventListener('click', e => {
+        e.preventDefault();
+        const cb = label.previousElementSibling;
+        cb.checked = !cb.checked;
+        syncToggle(cb);
+    });
+});
+
+// ── Send type ─────────────────────────────────────────────────────────
+document.querySelectorAll('input[name="send_type"]').forEach(r => {
+    r.addEventListener('change', function() {
+        if (this.value === 'csv') {
+            if (csvModal) {
+                csvModal.show();
+            } else {
+                Swal.fire({
+                    icon:'warning',
+                    title:'Upload Unavailable',
+                    text:'CSV upload modal is unavailable because Bootstrap JavaScript is not loaded.',
+                    confirmButtonColor:'#ff6600'
+                });
+            }
+        }
+    });
+});
+
+// ── Reset ─────────────────────────────────────────────────────────────
+document.getElementById('resetBtn').addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('smppForm').reset();
+
+    [senderBtn, templateBtn].forEach(btn => {
+        btn.querySelector('.selected-option').textContent = btn === senderBtn ? '-- Select Sender --' : '-- Select Template --';
+    });
+    [senderHidden, templateHidden].forEach(h => h.value = '');
+    [senderSearch, templateSearch].forEach(s => { s.value = ''; });
+    [senderClear, templateClear].forEach(c => c.style.display = 'none');
+    filterItems(senderItems, senderNoRes, '');
+    templateItems.innerHTML = '';
+    templateBtn.disabled    = true;
+    templateSearch.disabled = true;
+    closeAllDropdowns();
+
+    document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(cb => {
+        cb.checked = cb.id === 'removeDuplicates';
+        syncToggle(cb);
+    });
+
+    document.getElementById('langEnglish').checked = true;
+    document.getElementById('sendBatch').checked   = true;
+    csvNumbers = [];
+    csvFileInput.value = '';
+    fileInfo.classList.add('d-none');
+    columnSelector.classList.add('d-none');
+    updateMessageStats();
+});
+
+const walletBalance = parseFloat("{{ wallet_balance|default:'0' }}") || 0;
+const walletPlanType = "{{ wallet_plan_type|default:''|escapejs }}";
+const walletDeductionType = "{{ wallet_deduction_type|default:''|escapejs }}";
+
+function getEstimatedCreditNeed(formData) {
+    const mobNums = (formData.get('mobile_numbers') || '').trim();
+    const msg = (formData.get('message') || '').trim();
+    const textType = formData.get('text_type') || 'english';
+    const removeDup = formData.get('remove_duplicates') === 'enable';
+
+    if (!mobNums || !msg) {
+        return { recipients: 0, partsPerMessage: 0, totalPartsNeeded: 0 };
+    }
+
+    const nums = mobNums.split(/[\s,]+/).filter(Boolean);
+    const uniqueNums = removeDup ? [...new Set(nums)] : nums;
+    const charLimit = textType === 'english' ? 160 : 70;
+    const partsPerMessage = Math.max(1, Math.ceil(msg.length / charLimit));
+
+    return {
+        recipients: uniqueNums.length,
+        partsPerMessage,
+        totalPartsNeeded: uniqueNums.length * partsPerMessage
+    };
+}
+
+// ?????? Form submit ?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+document.getElementById('smppForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData    = new FormData(this);
+    const senderId    = formData.get('sender_name');
+    const mobNums     = formData.get('mobile_numbers').trim();
+    const msg         = formData.get('message').trim();
+
+    if (!senderId) {
+        Swal.fire({ icon:'error', title:'Sender Required', text:'Please select a Sender ID.', confirmButtonColor:'#ff6600' });
+        return;
+    }
+    if (!mobNums || !msg) {
+        Swal.fire({ icon:'error', title:'Missing Info', text:'Please enter mobile numbers and message.', confirmButtonColor:'#ff6600' });
+        return;
+    }
+
+    const nums     = mobNums.split(/[\s,]+/).filter(Boolean);
+    const removeDup = formData.get('remove_duplicates') === 'enable';
+    const unique   = removeDup ? [...new Set(nums)] : nums;
+    const creditNeed = getEstimatedCreditNeed(formData);
+
+    if (walletPlanType === 'Prepaid' && walletBalance < creditNeed.totalPartsNeeded) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Insufficient Balance',
+            html: `Available balance: <b>${walletBalance.toLocaleString('en-IN')}</b><br>Required: <b>${creditNeed.totalPartsNeeded.toLocaleString('en-IN')}</b><br>Deduction type: <b>${walletDeductionType || 'N/A'}</b><br><br>No need to submit this message.`,
+            confirmButtonColor: '#ff6600'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Send SMS?',
+        html: `Sending to <b>${unique.length}</b> recipient(s).<br>Estimated credits: <b>${creditNeed.totalPartsNeeded}</b><br>Deduction type: <b>${walletDeductionType || 'N/A'}</b>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ff6600',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Send!',
+        cancelButtonText: 'Cancel'
+    }).then(result => {
+        if (!result.isConfirmed) return;
+        Swal.fire({ title:'Sending???', html:'Please wait', allowOutsideClick:false, didOpen:() => Swal.showLoading() });
+
+        fetch(this.action || window.location.href, { method:'POST', body:formData })
+            .then(r => r.text())
+            .then(html => {
+                Swal.close();
+                const doc    = new DOMParser().parseFromString(html, 'text/html');
+                const errEl  = doc.querySelector('.alert-danger');
+                if (errEl) {
+                    Swal.fire({ icon:'error', title:'Send Failed', text:errEl.textContent.trim(), confirmButtonColor:'#ff6600' });
+                    return;
+                }
+                Swal.fire({
+                    icon:'success', title:'Messages Sent!',
+                    html:`Sent <b>${unique.length}</b> message(s) successfully.`,
+                    confirmButtonColor:'#ff6600', timer:3000, timerProgressBar:true
+                }).then(() => window.location.reload());
+            })
+            .catch(() => Swal.fire({ icon:'error', title:'Error', text:'Failed to send. Please try again.', confirmButtonColor:'#ff6600' }));
+    });
+});
+</script>
+{% endblock %}

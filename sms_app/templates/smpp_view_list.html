@@ -1,0 +1,498 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}SMPP Connection List{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+    }
+
+    .bg-theme { background-color: var(--theme-color) !important; }
+    .text-theme { color: var(--theme-color) !important; }
+
+    .card {
+        border-radius: 14px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        transition: transform .18s ease, box-shadow .18s ease;
+        overflow: hidden;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+
+    .card-header {
+        background: linear-gradient(90deg, rgba(0,0,0,0.03), rgba(0,0,0,0.01));
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        padding: 12px 18px;
+        font-weight: 650;
+    }
+    .card-header .title { font-size: 1rem; display: flex; gap: 8px; align-items: center; }
+
+    .meta-badge {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        color: #fff;
+        background-color: var(--theme-color);
+    }
+
+    /* 8-column grid on wide screens, responsive fallback */
+    .grid-8 {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 12px 18px;
+        align-items: start;
+    }
+
+    /* For medium screens: 4 columns */
+    @media (max-width: 1200px) {
+        .grid-8 { grid-template-columns: repeat(4, 1fr); }
+    }
+    /* For small screens: 2 columns */
+    @media (max-width: 768px) {
+        .grid-8 { grid-template-columns: repeat(2, 1fr); }
+    }
+    /* For extra small: single column */
+    @media (max-width: 420px) {
+        .grid-8 { grid-template-columns: 1fr; }
+    }
+
+    .info-card {
+        padding: 10px 12px;
+        background-color: #fff;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        min-height: 50px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .info-card i {
+        color: var(--theme-color);
+        font-size: 1.15rem;
+        margin-top: 2px;
+    }
+    .info-body { line-height: 1.05; }
+    .info-body .label { display:block; font-weight:600; font-size:0.82rem; color:#333; }
+    .info-body .value { color:#444; font-size:0.88rem; margin-top:3px; word-break:break-word; }
+
+    .card-body { padding: 16px; background: linear-gradient(180deg,#fff,#fbfbfb); }
+    .card-footer { padding: 12px 16px; background: rgba(0,0,0,0.02); display:flex; justify-content:flex-end; gap:8px; }
+
+    .btn-theme { background-color: var(--theme-color); color: #fff; border: none; }
+    .btn-outline-theme { border:1px solid var(--theme-color); color: var(--theme-color); background:transparent; }
+    .btn-sm { padding: .35rem .6rem; font-size: .85rem; border-radius: 8px; }
+
+    .muted { color: #666; font-size: 0.88rem; }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-theme mb-0"><i class="bi bi-hdd-network"></i> SMPP Connections</h4>
+        <div class="d-flex gap-2">
+            <a href="{% url 'add_smpp' %}" class="btn btn-theme btn-sm"><i class="bi bi-plus-circle"></i> Add SMPP</a>
+        </div>
+    </div>
+
+    {% if smpp_connections %}
+        <div class="row g-4">
+            {% for smpp in smpp_connections %}
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div class="title">
+                                <i class="bi bi-router"></i>
+                                <div>
+                                    {{ smpp.connect_name|default:"Unnamed Connection" }}
+                                    <div class="muted" style="font-size:0.85rem;">ID: {{ smpp.smpp_id }} &middot; Created by: {{ smpp.create_by|default:'-' }}</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="meta-badge">{{ smpp.smpp_connect_status|default:"Inactive" }}</div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="grid-8">
+                                <!-- 1 -->
+                                <div class="info-card">
+                                    <i class="bi bi-link-45deg"></i>
+                                    <div class="info-body">
+                                        <span class="label">Connect Name</span>
+                                        <span class="value">{{ smpp.connect_name }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 2 -->
+                                <div class="info-card">
+                                    <i class="bi bi-cash-stack"></i>
+                                    <div class="info-body">
+                                        <span class="label">Billing Method</span>
+                                        <span class="value">{{ smpp.billing_method }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 3 -->
+                                <div class="info-card">
+                                    <i class="bi bi-person-badge"></i>
+                                    <div class="info-body">
+                                        <span class="label">Account Type</span>
+                                        <span class="value">{{ smpp.account_type }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 4 -->
+                                <div class="info-card">
+                                    <i class="bi bi-bug"></i>
+                                    <div class="info-body">
+                                        <span class="label">Error Code Map</span>
+                                        <span class="value">{{ smpp.error_code_map|default:"-" }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 5 -->
+                                <div class="info-card">
+                                    <i class="bi bi-toggle-on"></i>
+                                    <div class="info-body">
+                                        <span class="label">Status</span>
+                                        <span class="value">{{ smpp.smpp_connect_status }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 6 -->
+                                <div class="info-card">
+                                    <i class="bi bi-hdd-network"></i>
+                                    <div class="info-body">
+                                        <span class="label">IP</span>
+                                        <span class="value">{{ smpp.ip }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 7 -->
+                                <div class="info-card">
+                                    <i class="bi bi-person-circle"></i>
+                                    <div class="info-body">
+                                        <span class="label">Username</span>
+                                        <span class="value">{{ smpp.username }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 8 -->
+                                <div class="info-card">
+                                    <i class="bi bi-key"></i>
+                                    <div class="info-body">
+                                        <span class="label">Password</span>
+                                        <span class="value">••••••••</span>
+                                    </div>
+                                </div>
+
+                                <!-- 9 -->
+                                <div class="info-card">
+                                    <i class="bi bi-shuffle"></i>
+                                    <div class="info-body">
+                                        <span class="label">Bind Type</span>
+                                        <span class="value">{{ smpp.bind_type }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 10 -->
+                                <div class="info-card">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <div class="info-body">
+                                        <span class="label">TPS</span>
+                                        <span class="value">{{ smpp.tps }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 11 -->
+                                <div class="info-card">
+                                    <i class="bi bi-plug"></i>
+                                    <div class="info-body">
+                                        <span class="label">TR/TRX Port</span>
+                                        <span class="value">{{ smpp.tr_trx_port }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 12 -->
+                                <div class="info-card">
+                                    <i class="bi bi-diagram-3"></i>
+                                    <div class="info-body">
+                                        <span class="label">TX Sessions</span>
+                                        <span class="value">{{ smpp.tx_sessions }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 13 -->
+                                <div class="info-card">
+                                    <i class="bi bi-plug-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">RX Port</span>
+                                        <span class="value">{{ smpp.rx_port }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 14 -->
+                                <div class="info-card">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">RX Sessions</span>
+                                        <span class="value">{{ smpp.rx_sessions }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 15 -->
+                                <div class="info-card">
+                                    <i class="bi bi-gear"></i>
+                                    <div class="info-body">
+                                        <span class="label">System Type</span>
+                                        <span class="value">{{ smpp.system_type }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 16 -->
+                                <div class="info-card">
+                                    <i class="bi bi-diagram-2"></i>
+                                    <div class="info-body">
+                                        <span class="label">Dest Addr TON</span>
+                                        <span class="value">{{ smpp.dest_addr_ton }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 17 -->
+                                <div class="info-card">
+                                    <i class="bi bi-diagram-2-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">Dest Addr NPI</span>
+                                        <span class="value">{{ smpp.dest_addr_npi }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 18 -->
+                                <div class="info-card">
+                                    <i class="bi bi-diagram-3"></i>
+                                    <div class="info-body">
+                                        <span class="label">Source Addr TON</span>
+                                        <span class="value">{{ smpp.source_addr_ton }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 19 -->
+                                <div class="info-card">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">Source Addr NPI</span>
+                                        <span class="value">{{ smpp.source_addr_npi }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 20 -->
+                                <div class="info-card">
+                                    <i class="bi bi-clock-history"></i>
+                                    <div class="info-body">
+                                        <span class="label">Delivery Report TZ</span>
+                                        <span class="value">{{ smpp.delivery_report_timezone }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 21 -->
+                                <div class="info-card">
+                                    <i class="bi bi-clock"></i>
+                                    <div class="info-body">
+                                        <span class="label">Override Delivery Time</span>
+                                        <span class="value">{{ smpp.override_delivery_time_flag }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 22 -->
+                                <div class="info-card">
+                                    <i class="bi bi-calendar3"></i>
+                                    <div class="info-body">
+                                        <span class="label">Date Format in DLR</span>
+                                        <span class="value">{{ smpp.date_format_in_dlr }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 23 -->
+                                <div class="info-card">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <div class="info-body">
+                                        <span class="label">Modify Time Zone</span>
+                                        <span class="value">{{ smpp.modify_time_zone }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 24 -->
+                                <div class="info-card">
+                                    <i class="bi bi-check2-square"></i>
+                                    <div class="info-body">
+                                        <span class="label">Support Message Validity</span>
+                                        <span class="value">{{ smpp.support_message_validity|yesno:"Yes,No" }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 25 -->
+                                <div class="info-card">
+                                    <i class="bi bi-toggle2"></i>
+                                    <div class="info-body">
+                                        <span class="label">DLT Enabled</span>
+                                        <span class="value">{{ smpp.dlt_enable|yesno:"Yes,No" }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 26 -->
+                                <div class="info-card">
+                                    <i class="bi bi-building"></i>
+                                    <div class="info-body">
+                                        <span class="label">DLT Telemarketer ID</span>
+                                        <span class="value">{{ smpp.dlt_telemarketer_id }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 27 -->
+                                <div class="info-card">
+                                    <i class="bi bi-send-check"></i>
+                                    <div class="info-body">
+                                        <span class="label">Send DLT Template ID</span>
+                                        <span class="value">{{ smpp.send_dlt_template_id|yesno:"Yes,No" }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 28 -->
+                                <div class="info-card">
+                                    <i class="bi bi-x-circle"></i>
+                                    <div class="info-body">
+                                        <span class="label">Reject Non DLT Msg</span>
+                                        <span class="value">{{ smpp.reject_non_dlt_template_message|yesno:"Yes,No" }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 29 -->
+                                <div class="info-card">
+                                    <i class="bi bi-tag"></i>
+                                    <div class="info-body">
+                                        <span class="label">DLT Entity ID Tag</span>
+                                        <span class="value">{{ smpp.dlt_entity_id_tag }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 30 -->
+                                <div class="info-card">
+                                    <i class="bi bi-tag-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">DLT Template ID Tag</span>
+                                        <span class="value">{{ smpp.dlt_template_id_tag }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 31 -->
+                                <div class="info-card">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">DLT Telemarketer ID Tag</span>
+                                        <span class="value">{{ smpp.dlt_telemarketer_id_tag }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 32 -->
+                                <div class="info-card">
+                                    <i class="bi bi-gear-wide-connected"></i>
+                                    <div class="info-body">
+                                        <span class="label">DLT Telemarketer Tag Behaviour</span>
+                                        <span class="value">{{ smpp.dlt_telemarketer_tag_behaviour }}</span>
+                                    </div>
+                                </div>
+
+
+                                
+                                <!-- 25 -->
+                                {% comment %} <div class="info-card">
+                                    <i class="bi bi-toggle2"></i>
+                                    <div class="info-body">
+                                        <span class="label">Bind Status</span>
+                                        <span class="value">{{ smpp.bind_status }}</span>
+                                    </div>
+                                </div> {% endcomment %}
+
+                                <!-- 26 -->
+                                <div class="info-card">
+                                    <i class="bi bi-building"></i>
+                                    <div class="info-body">
+                                        <span class="label">Keepalive Interval</span>
+                                        <span class="value">{{ smpp.keepalive_interval }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 27 -->
+                                <div class="info-card">
+                                    <i class="bi bi-send-check"></i>
+                                    <div class="info-body">
+                                        <span class="label">Bind Status</span>
+                                        <span class="value">{{ smpp.bind_status }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 28 -->
+                                <div class="info-card">
+                                    <i class="bi bi-x-circle"></i>
+                                    <div class="info-body">
+                                        <span class="label">Last bind time</span>
+                                        <span class="value">{{ smpp.last_bind_time}}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 29 -->
+                                <div class="info-card">
+                                    <i class="bi bi-tag"></i>
+                                    <div class="info-body">
+                                        <span class="label">Is Alive</span>
+                                        <span class="value">{{ smpp.is_alive }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 30 -->
+                                <div class="info-card">
+                                    <i class="bi bi-tag-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">tx session</span>
+                                        <span class="value">{{ smpp.tx_active_sessions }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 31 -->
+                                <div class="info-card">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <div class="info-body">
+                                        <span class="label">Uptime Second</span>
+                                        <span class="value">{{ smpp.uptime_seconds }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 32 -->
+                                <div class="info-card">
+                                    <i class="bi bi-gear-wide-connected"></i>
+                                    <div class="info-body">
+                                        <span class="label">Reconnect Attempt</span>
+                                        <span class="value">{{ smpp.reconnect_attempt }}</span>
+                                    </div>
+                                </div>
+
+                        <div class="card-footer">
+                            <a href="{% url 'edit_smpp' smpp.smpp_id %}" class="btn btn-outline-theme btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                            <form method="post" action="{% url 'delete_smpp' smpp.smpp_id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
+                            </form>
+                        </div>
+                    </div> <!-- end card -->
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info"><i class="bi bi-info-circle"></i> No SMPP connections found.</div>
+    {% endif %}
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}

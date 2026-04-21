@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Routing Management{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+    }
+    .bg-theme { background-color: var(--theme-color) !important; }
+    .text-theme { color: var(--theme-color) !important; }
+    .btn-theme { background-color: var(--theme-color); color: #fff; border: none; }
+    .btn-theme:hover { filter: brightness(0.95); }
+    .small-input { max-width: 120px; display: inline-block; }
+    .cursor-pointer { cursor:pointer; }
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow-lg rounded-4">
+        <div class="card-header bg-theme text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">🔀 Routing Management</h4>
+            <div>
+                <a href="{% url 'routing_mapping_list' %}">
+                    <button class="btn btn-light btn-sm fw-bold">➕ Mapp Routing</button>
+                </a>
+                <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addRoutingModal">
+                    ➕ Add Routing
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body bg-white">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <table class="table table-striped table-hover text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Name</th>
+                        <th>Strategy</th>
+                        <th>Primary Connect</th>
+                        <th>Apply Rules</th>
+                        <th>Message Retry</th>
+                        <th>Reject Non-PEID</th>
+                        <th>Created Date</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in routings %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ r.name }}</td>
+                        <td>{{ r.strategy }}</td>
+                        <td>{{ r.primary_connect|default:"—" }}</td>
+                        <td>{% if r.apply_rules %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if r.message_retry %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if r.reject_non_peid_messages %}Yes{% else %}No{% endif %}</td>
+                        <td>{{ r.created_date|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <button class="btn btn-outline-theme btn-sm" data-bs-toggle="modal" data-bs-target="#editRoutingModal{{ r.rout_id }}">
+                                ✏️
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Routing Modal -->
+                    <div class="modal fade" id="editRoutingModal{{ r.rout_id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content rounded-4">
+                                <div class="modal-header bg-warning text-dark">
+                                    <h5 class="modal-title">✏️ Edit Routing - {{ r.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{% url 'edit_routing' r.rout_id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Name</label>
+                                                <input type="text" name="name" value="{{ r.name }}" class="form-control mb-3" required>
+
+                                                <label class="form-label">Strategy</label>
+                                                <select name="strategy" class="form-select mb-3 strategy-select" data-target="#edit-lines-{{ r.rout_id }}">
+                                                    <option value="Dedicated" {% if r.strategy == 'Dedicated' %}selected{% endif %}>Dedicated</option>
+                                                    <option value="Percentage" {% if r.strategy == 'Percentage' %}selected{% endif %}>Percentage</option>
+                                                    <option value="Round-Robin" {% if r.strategy == 'Round-Robin' %}selected{% endif %}>Round-Robin</option>
+                                                    <option value="Priority" {% if r.strategy == 'Priority' %}selected{% endif %}>Priority</option>
+                                                </select>
+
+                                                <label class="form-label">Primary Connect</label>
+                                                <input type="text" name="primary_connect" value="{{ r.primary_connect }}" class="form-control mb-3">
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label d-block">Apply Rules</label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" name="apply_rules" {% if r.apply_rules %}checked{% endif %}>
+                                                        <label class="form-check-label">Enabled</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label d-block">Message Retry</label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" name="message_retry" {% if r.message_retry %}checked{% endif %}>
+                                                        <label class="form-check-label">Enabled</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label d-block">Reject Non-PEID Messages</label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" name="reject_non_peid_messages" {% if r.reject_non_peid_messages %}checked{% endif %}>
+                                                        <label class="form-check-label">Enabled</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Dynamic lines area -->
+                                        <hr>
+                                        <div id="edit-lines-{{ r.rout_id }}" class="routing-lines-container">
+                                            {# Render existing routing lines for this routing so user can edit them #}
+                                            {% for line in r.routing_lines.all %}
+                                                <div class="line-row mb-2 d-flex align-items-center">
+                                                    <select name="{% if r.strategy == 'Percentage' %}percentage_smpp[]{% elif r.strategy == 'Priority' %}priority_smpp[]{% elif r.strategy == 'Round-Robin' %}smpp_roundrobin[]{% else %}smpp_dedicated{% endif %}" class="form-select me-2" style="min-width:220px;">
+                                                        <option value="">-- Select SMPP --</option>
+                                                        {% for s in smpp_connections %}
+                                                            <option value="{{ s.smpp_id }}" {% if line.smpp and line.smpp.smpp_id == s.smpp_id %}selected{% endif %}>{{ s.connect_name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+
+                                                    {% if r.strategy == 'Percentage' %}
+                                                        <input type="number" name="percentage_weight[]" class="form-control small-input me-2" placeholder="Weight %" value="{{ line.percentage_weight|default:'' }}">
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-line">✖</button>
+                                                    {% elif r.strategy == 'Priority' %}
+                                                        <input type="number" name="priority_value[]" class="form-control small-input me-2" placeholder="Priority" value="{{ line.percentage_weight|default:'0' }}">
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-line">✖</button>
+                                                    {% elif r.strategy == 'Round-Robin' %}
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-line">Remove</button>
+                                                    {% else %}
+                                                        <input type="date" name="ded_start_date" class="form-control small-input me-2" value="{{ line.start_date|date:'Y-m-d' }}">
+                                                        <input type="date" name="ded_end_date" class="form-control small-input me-2" value="{{ line.end_date|date:'Y-m-d' }}">
+                                                    {% endif %}
+                                                </div>
+                                            {% empty %}
+                                                <!-- No lines yet -->
+                                                <div class="text-muted">No mapping rows found — add below.</div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <!-- Controls for adding lines (for edit modal) -->
+                                        <div class="mt-3" id="edit-controls-{{ r.rout_id }}">
+                                            <button type="button" class="btn btn-sm btn-outline-primary add-line" data-target="#edit-lines-{{ r.rout_id }}">➕ Add Row</button>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-success">💾 Save Changes</button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Routing Modal -->
+<div class="modal fade" id="addRoutingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+            <div class="modal-header bg-theme text-white">
+                <h5 class="modal-title">➕ Add New Routing</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_routing' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control mb-3" required>
+
+                            <label class="form-label">Strategy</label>
+                            <select name="strategy" class="form-select mb-3 strategy-select" data-target="#add-lines">
+                                <option value="Dedicated">Dedicated</option>
+                                <option value="Percentage">Percentage</option>
+                                <option value="Round-Robin">Round-Robin</option>
+                                <option value="Priority">Priority</option>
+                            </select>
+
+                            <label class="form-label">Primary Connect</label>
+                            <input type="text" name="primary_connect" class="form-control mb-3">
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Apply Rules</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="apply_rules" checked>
+                                    <label class="form-check-label">Enabled</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label d-block">Message Retry</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="message_retry">
+                                    <label class="form-check-label">Enabled</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label d-block">Reject Non-PEID Messages</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="reject_non_peid_messages">
+                                    <label class="form-check-label">Enabled</label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <hr>
+                    <!-- Dynamic lines area for Add modal -->
+                    <div id="add-lines" class="routing-lines-container mb-2">
+                        <!-- initial default UI: Dedicated inputs -->
+                        <div class="line-row d-flex align-items-center mb-2">
+                            <select name="smpp_dedicated" class="form-select me-2" style="min-width:220px;">
+                                <option value="">-- Select SMPP --</option>
+                                {% for s in smpp_connections %}
+                                    <option value="{{ s.smpp_id }}">{{ s.connect_name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% comment %} <input type="date" name="ded_start_date" class="form-control small-input me-2" placeholder="Start">
+                            <input type="date" name="ded_end_date" class="form-control small-input me-2" placeholder="End"> {% endcomment %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="add-row-btn" data-target="#add-lines">➕ Add Row</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-theme">✅ Add Routing</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JS: dynamic fields -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Utility: build SMPP options HTML once
+    const smppOptions = `
+        <option value="">-- Select SMPP --</option>
+        {% for s in smpp_connections %}
+            <option value="{{ s.smpp_id }}">{{ s.connect_name }}</option>
+        {% endfor %}
+    `;
+
+    // When strategy select changes, replace the target container contents
+    document.querySelectorAll('.strategy-select').forEach(function(sel) {
+        sel.addEventListener('change', function(e){
+            const targetSelector = sel.getAttribute('data-target');
+            const target = document.querySelector(targetSelector);
+            if (!target) return;
+            renderLinesForStrategy(sel.value, target);
+        });
+
+        // Trigger initial render for selects that are inside edit modals (to reflect saved strategy)
+        const evt = new Event('change');
+        sel.dispatchEvent(evt);
+    });
+
+    // Add row button(s) — delegated
+    document.addEventListener('click', function(ev) {
+        if (ev.target.matches('#add-row-btn') || ev.target.closest('.add-line')) {
+            const trg = ev.target.getAttribute('data-target') || ev.target.closest('button').getAttribute('data-target');
+            const container = document.querySelector(trg);
+            if (!container) return;
+            const parentStrategy = document.querySelector(`[data-target="${trg}"]`).value;
+            addRow(container, parentStrategy);
+            return;
+        }
+
+        // remove-line button
+        if (ev.target.matches('.remove-line')) {
+            ev.target.closest('.line-row').remove();
+            return;
+        }
+    });
+
+    function renderLinesForStrategy(strategy, container) {
+        container.innerHTML = '';
+        if (strategy === 'Dedicated') {
+            container.innerHTML = `
+                <div class="line-row d-flex align-items-center mb-2">
+                    <select name="smpp_dedicated" class="form-select me-2" style="min-width:220px;">
+                        ${smppOptions}
+                    </select>
+                    {% comment %} <input type="date" name="ded_start_date" class="form-control small-input me-2" placeholder="Start">
+                    <input type="date" name="ded_end_date" class="form-control small-input me-2" placeholder="End"> {% endcomment %}
+                </div>
+            `;
+        } else if (strategy === 'Round-Robin') {
+            container.innerHTML = `
+                <div class="line-row d-flex align-items-center mb-2">
+                    <select name="smpp_roundrobin[]" class="form-select me-2" style="min-width:300px;">
+                        ${smppOptions}
+                    </select>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-line">Remove</button>
+                </div>
+            `;
+        } else if (strategy === 'Percentage') {
+            container.innerHTML = `
+                <div class="line-row d-flex align-items-center mb-2">
+                    <select name="percentage_smpp[]" class="form-select me-2" style="min-width:220px;">
+                        ${smppOptions}
+                    </select>
+                    <input type="number" name="percentage_weight[]" class="form-control small-input me-2" placeholder="Weight %">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-line">✖</button>
+                </div>
+            `;
+        } else if (strategy === 'Priority') {
+            container.innerHTML = `
+                <div class="line-row d-flex align-items-center mb-2">
+                    <select name="priority_smpp[]" class="form-select me-2" style="min-width:220px;">
+                        ${smppOptions}
+                    </select>
+                    <input type="number" name="priority_value[]" class="form-control small-input me-2" placeholder="Priority (1)">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-line">✖</button>
+                </div>
+            `;
+        }
+    }
+
+    function addRow(container, strategy) {
+        const row = document.createElement('div');
+        row.className = 'line-row d-flex align-items-center mb-2';
+        let inner = '';
+        if (strategy === 'Dedicated') {
+            // Replace existing dedicated row (only one allowed)
+            container.innerHTML = `
+                <div class="line-row d-flex align-items-center mb-2">
+                    <select name="smpp_dedicated" class="form-select me-2" style="min-width:220px;">
+                        ${smppOptions}
+                    </select>
+                    <input type="date" name="ded_start_date" class="form-control small-input me-2" placeholder="Start">
+                    <input type="date" name="ded_end_date" class="form-control small-input me-2" placeholder="End">
+                </div>
+            `;
+            return;
+        } else if (strategy === 'Round-Robin') {
+            inner = `
+                <select name="smpp_roundrobin[]" class="form-select me-2" style="min-width:300px;">
+                    ${smppOptions}
+                </select>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-line">Remove</button>
+            `;
+        } else if (strategy === 'Percentage') {
+            inner = `
+                <select name="percentage_smpp[]" class="form-select me-2" style="min-width:220px;">
+                    ${smppOptions}
+                </select>
+                <input type="number" name="percentage_weight[]" class="form-control small-input me-2" placeholder="Weight %">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-line">✖</button>
+            `;
+        } else if (strategy === 'Priority') {
+            inner = `
+                <select name="priority_smpp[]" class="form-select me-2" style="min-width:220px;">
+                    ${smppOptions}
+                </select>
+                <input type="number" name="priority_value[]" class="form-control small-input me-2" placeholder="Priority">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-line">✖</button>
+            `;
+        }
+        row.innerHTML = inner;
+        container.appendChild(row);
+    }
+
+});
+</script>
+
+{% endblock %}

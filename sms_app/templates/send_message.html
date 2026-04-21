@@ -1,0 +1,18 @@
+<form id="sendForm">
+    SMPP Connection ID: <input type="number" name="smpp_id" required><br>
+    Sender ID: <input type="text" name="sender_id" required><br>
+    Template ID: <input type="number" name="template_id"><br>
+    Mobile Number: <input type="text" name="mobile_number" required><br>
+    Message: <textarea name="message_text" required></textarea><br>
+    <button type="submit">Send</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$("#sendForm").on('submit', function(e){
+    e.preventDefault();
+    $.post("/send_message/", $(this).serialize(), function(data){
+        alert(data.status + (data.message_id ? " ID: "+data.message_id : ""));
+    });
+});
+</script>

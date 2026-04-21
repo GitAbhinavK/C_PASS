@@ -1,0 +1,33 @@
+2025-11-24 15:29:00,420 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:29:00,441 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:29:00,441 - smpp_client - ERROR - Connection failed to 103.153.58.74:9889 - name 'timezone' is not defined
+2025-11-24 15:31:47,301 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:31:47,310 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:31:47,311 - smpp_client - ERROR - Connection failed to 103.153.58.74:9889 - name 'timezone' is not defined
+2025-11-24 15:32:03,483 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:32:03,494 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:32:03,494 - smpp_client - ERROR - Connection failed to 103.153.58.74:9889 - name 'timezone' is not defined
+2025-11-24 15:33:26,990 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:33:27,010 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:33:27,011 - smpp_client - ERROR - Connection failed to 103.153.58.74:9889 - type object 'datetime.timezone' has no attribute 'now'
+2025-11-24 15:34:09,865 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:34:09,880 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:35:21,607 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:35:21,617 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:40:00,823 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:40:00,835 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:40:00,838 - smpp_client - INFO - Attempting transceiver bind for DEVSMPP
+2025-11-24 15:40:00,839 - smpp_client - DEBUG - PDU length: 43
+2025-11-24 15:40:00,839 - smpp_client - DEBUG - System ID: DEVSMPP, Password: ********, System Type: SMPP
+2025-11-24 15:40:00,839 - smpp_client - DEBUG - Sent PDU: 42 bytes
+2025-11-24 15:40:30,833 - smpp_client - ERROR - Timeout waiting for response
+2025-11-24 15:40:30,834 - smpp_client - ERROR - No response from server after bind request
+2025-11-24 15:43:51,861 - smpp_client - INFO - Attempting to connect to 103.153.58.74:9889
+2025-11-24 15:43:51,873 - smpp_client - INFO - TCP connection established to 103.153.58.74:9889
+2025-11-24 15:43:51,876 - smpp_client - INFO - Attempting transceiver bind for DEVSMPP
+2025-11-24 15:43:51,877 - smpp_client - DEBUG - PDU length: 43
+2025-11-24 15:43:51,877 - smpp_client - DEBUG - System ID: DEVSMPP, Password length: 8, System Type: SMPP
+2025-11-24 15:43:51,877 - smpp_client - DEBUG - Raw PDU (first 32 bytes): 0000002b000000090000000000000001444556534d505000536d734031323323
+2025-11-24 15:43:51,878 - smpp_client - DEBUG - Sending PDU: 42 bytes
+2025-11-24 15:44:06,884 - smpp_client - ERROR - Timeout (15s) waiting for response
+2025-11-24 15:44:06,884 - smpp_client - ERROR - No response from server after bind request - server may not be SMPP or credentials are wrong

@@ -1,0 +1,651 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ connection.connect_name }} - Details</h1>
+        <div class="btn-group">
+            <a href="{% url 'smpp_connections' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+            {% if connection.bind_status != 'BOUND' %}
+            <button class="btn btn-success btn-bind" data-smpp-id="{{ connection.smpp_id }}">
+                <i class="fas fa-play"></i> Bind Connection
+            </button>
+            {% else %}
+            <button class="btn btn-danger btn-stop" data-smpp-id="{{ connection.smpp_id }}">
+                <i class="fas fa-stop"></i> Stop Connection
+            </button>
+            <button class="btn btn-primary btn-send-test" data-bs-toggle="modal" data-bs-target="#testMessageModal">
+                <i class="fas fa-paper-plane"></i> Send Test SMS
+            </button>
+            {% endif %}
+            <button class="btn btn-info btn-refresh-status">
+                <i class="fas fa-sync-alt"></i> Refresh Status
+            </button>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert 
+                {% if connection.bind_status == 'BOUND' %}alert-success
+                {% elif connection.bind_status == 'UNBOUND' %}alert-secondary
+                {% elif connection.bind_status == 'FAILED' %}alert-danger
+                {% else %}alert-warning{% endif %}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Bind Status:</strong> 
+                        <span class="badge 
+                            {% if connection.bind_status == 'BOUND' %}bg-success
+                            {% elif connection.bind_status == 'UNBOUND' %}bg-secondary
+                            {% elif connection.bind_status == 'FAILED' %}bg-danger
+                            {% else %}bg-warning{% endif %}">
+                            {{ connection.bind_status }}
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Connection Status:</strong> 
+                        <span class="badge {% if connection.is_alive %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if connection.is_alive %}ALIVE{% else %}DEAD{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Connection Details -->
+        <div class="col-md-6">
+            <!-- Basic Connection Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-server"></i> Connection Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Connection Name:</th>
+                            <td>{{ connection.connect_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>IP Address:</th>
+                            <td>{{ connection.ip }}</td>
+                        </tr>
+                        <tr>
+                            <th>TX/TRX Port:</th>
+                            <td>{{ connection.tr_trx_port }}</td>
+                        </tr>
+                        <tr>
+                            <th>RX Port:</th>
+                            <td>{{ connection.rx_port }}</td>
+                        </tr>
+                        <tr>
+                            <th>Username:</th>
+                            <td>{{ connection.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>System Type:</th>
+                            <td>{{ connection.system_type|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Bind Type:</th>
+                            <td>{{ connection.get_bind_type_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Performance Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tachometer-alt"></i> Performance Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">TPS:</th>
+                            <td>{{ connection.tps|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>TX Sessions:</th>
+                            <td>{{ connection.tx_sessions|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>RX Sessions:</th>
+                            <td>{{ connection.rx_sessions|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Window Size:</th>
+                            <td>{{ connection.window_size|default:"10" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Keepalive Interval:</th>
+                            <td>{{ connection.keepalive_interval }} seconds</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DLT Settings -->
+            {% if connection.dlt_enable %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt"></i> DLT Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">DLT Enabled:</th>
+                            <td><span class="badge bg-success">Yes</span></td>
+                        </tr>
+                        <tr>
+                            <th>Telemarketer ID:</th>
+                            <td>{{ connection.dlt_telemarketer_id|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Send Template ID:</th>
+                            <td>
+                                {% if connection.send_dlt_template_id %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Entity ID Tag:</th>
+                            <td>{{ connection.dlt_entity_id_tag }}</td>
+                        </tr>
+                        <tr>
+                            <th>Template ID Tag:</th>
+                            <td>{{ connection.dlt_template_id_tag }}</td>
+                        </tr>
+                        <tr>
+                            <th>TMID Tag:</th>
+                            <td>{{ connection.dlt_telemarketer_id_tag }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Status & Actions -->
+        <div class="col-md-6">
+            <!-- Real-time Status -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-heartbeat"></i> Real-time Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="card {% if connection.tx_active_sessions > 0 %}bg-success text-white{% else %}bg-light{% endif %}">
+                                <div class="card-body">
+                                    <h3>{{ connection.tx_active_sessions }}</h3>
+                                    <small>TX Active Sessions</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card {% if connection.rx_active_sessions > 0 %}bg-success text-white{% else %}bg-light{% endif %}">
+                                <div class="card-body">
+                                    <h3>{{ connection.rx_active_sessions }}</h3>
+                                    <small>RX Active Sessions</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Last Bind Time:</th>
+                            <td>{{ connection.last_bind_time|default:"Never" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Enquire Link:</th>
+                            <td>{{ connection.last_enquire_link_time|default:"Never" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Uptime:</th>
+                            <td>{{ connection.uptime_seconds|default:0 }} seconds</td>
+                        </tr>
+                        <tr>
+                            <th>Reconnect Attempts:</th>
+                            <td>{{ connection.reconnect_attempts }}</td>
+                        </tr>
+                        <tr>
+                            <th>Connection Mode:</th>
+                            <td>{{ connection.get_connection_mode_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Addressing Parameters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-address-card"></i> Addressing Parameters
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Source TON:</th>
+                            <td>{{ connection.source_addr_ton|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Source NPI:</th>
+                            <td>{{ connection.source_addr_npi|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Destination TON:</th>
+                            <td>{{ connection.dest_addr_ton|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Destination NPI:</th>
+                            <td>{{ connection.dest_addr_npi|default:"Not set" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DLR Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt"></i> DLR Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Timezone:</th>
+                            <td>{{ connection.delivery_report_timezone|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Override Delivery Time:</th>
+                            <td>{{ connection.get_override_delivery_time_flag_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Support Message Validity:</th>
+                            <td>
+                                {% if connection.support_message_validity %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Date Format in DLR:</th>
+                            <td>{{ connection.get_date_format_in_dlr_display|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Modify Timezone:</th>
+                            <td>{{ connection.get_modify_time_zone_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Business Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-business-time"></i> Business Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Billing Method:</th>
+                            <td>{{ connection.get_billing_method_display|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Account Type:</th>
+                            <td>{{ connection.get_account_type_display|default:"Not set" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Information -->
+    {% if connection.last_error %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Last Error
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <code class="text-danger">{{ connection.last_error }}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="connection-footer">
+                        <div class="d-flex justify-content-between">
+                            <small>
+                                <i class="fas fa-clock me-1"></i>
+                                Updated: {{ connection.last_updated_date|timesince }} ago
+                            </small>
+                            <small>
+                                ID: {{ connection.smpp_id }}
+                            </small>
+                        </div>
+                        {% if connection.last_bind_time %}
+                        <div class="mt-1">
+                            <small>
+                                <i class="fas fa-link me-1"></i>
+                                Last bind: {{ connection.last_bind_time|timesince }} ago
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+    <!-- Metadata -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Metadata
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="20%">Created By:</th>
+                            <td>{{ connection.create_by|default:"Not set" }}</td>
+                            <th width="20%">Created Date:</th>
+                            <td>{{ connection.created_date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated By:</th>
+                            <td>{{ connection.last_updated_by|default:"Not set" }}</td>
+                            <th>Last Updated Date:</th>
+                            <td>{{ connection.last_updated_date }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Message Modal -->
+<div class="modal fade" id="testMessageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Test Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="testMessageForm">
+                    <div class="mb-3">
+                        <label class="form-label">Destination Address</label>
+                        <input type="text" class="form-control" name="destination" required placeholder="Enter phone number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" name="message" rows="3" required placeholder="Enter your message"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="sendTestMessage">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Bind button handler
+    const bindButton = document.querySelector('.btn-bind');
+    if (bindButton) {
+        bindButton.addEventListener('click', function() {
+            const smppId = this.dataset.smppId;
+            bindConnection(smppId, this);
+        });
+    }
+    
+    // Stop button handler
+    const stopButton = document.querySelector('.btn-stop');
+    if (stopButton) {
+        stopButton.addEventListener('click', function() {
+            const smppId = this.dataset.smppId;
+            stopConnection(smppId, this);
+        });
+    }
+    
+    // Refresh status button
+    const refreshButton = document.querySelector('.btn-refresh-status');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', function() {
+            location.reload();
+        });
+    }
+    
+    // Send test message handler
+    const sendTestButton = document.getElementById('sendTestMessage');
+    if (sendTestButton) {
+        sendTestButton.addEventListener('click', function() {
+            sendTestMessage({{ connection.smpp_id }});
+        });
+    }
+    
+    function bindConnection(smppId, button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Binding...';
+        
+        fetch(`/smpp/${smppId}/bind/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('Connection bind initiated successfully!', 'success');
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showAlert('Error: ' + data.message, 'danger');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-play"></i> Bind Connection';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error: ' + error.message, 'danger');
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-play"></i> Bind Connection';
+        });
+    }
+    
+    function stopConnection(smppId, button) {
+        if (!confirm('Are you sure you want to stop this connection?')) {
+            return;
+        }
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stopping...';
+        
+        fetch(`/smpp/${smppId}/unbind/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('Connection stopped successfully!', 'success');
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showAlert('Error: ' + data.message, 'danger');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-stop"></i> Stop Connection';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error: ' + error.message, 'danger');
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-stop"></i> Stop Connection';
+        });
+    }
+    
+    function sendTestMessage(smppId) {
+        const form = document.getElementById('testMessageForm');
+        const destination = form.destination.value;
+        const message = form.message.value;
+        const sendButton = document.getElementById('sendTestMessage');
+        
+        if (!destination || !message) {
+            showAlert('Please fill in all fields', 'warning');
+            return;
+        }
+        
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        fetch(`/smpp/${smppId}/send-sms/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                destination: destination,
+                message: message
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('Message sent successfully! Message ID: ' + (data.message_id || 'N/A'), 'success');
+                $('#testMessageModal').modal('hide');
+                form.reset();
+            } else {
+                showAlert('Error: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error: ' + error.message, 'danger');
+        })
+        .finally(() => {
+            sendButton.disabled = false;
+            sendButton.innerHTML = 'Send Message';
+        });
+    }
+    
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert-dismissible');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container-fluid').prepend(alertDiv);
+        
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Auto-refresh status every 30 seconds if connection is bound
+    {% if connection.bind_status == 'BOUND' %}
+    setInterval(() => {
+        location.reload();
+    }, 30000);
+    {% endif %}
+});
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn {
+    margin-right: 5px;
+}
+</style>
+{% endblock %}

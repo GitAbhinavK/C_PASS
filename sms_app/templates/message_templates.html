@@ -1,0 +1,681 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Message Templates{% endblock %}
+
+{% block content %}
+<style>
+:root {
+    --theme-color:   {{ user_company.attributes_1|default:'#FF6600' }};
+    --theme-dark:    #e65c00;
+    --theme-light:   rgba(255,102,0,0.10);
+    --theme-lighter: rgba(255,102,0,0.05);
+    --radius: 14px;
+    --card-bg:       #ffffff;
+    --card-border:   #e9ecef;
+    --tbl-head-bg:   #f8f9fa;
+    --tbl-hover:     rgba(255,102,0,0.04);
+    --text-main:     #1e293b;
+    --text-muted:    #64748b;
+    --input-bg:      #ffffff;
+    --input-border:  #dee2e6;
+    --modal-bg:      #ffffff;
+    --shadow:        0 4px 24px rgba(0,0,0,0.07);
+}
+
+/* ── Dark mode ── */
+.dark-mode {
+    --card-bg:       #1e1e1e;
+    --card-border:   #2d2d2d;
+    --tbl-head-bg:   #161616;
+    --tbl-hover:     rgba(255,102,0,0.08);
+    --text-main:     #f1f5f9;
+    --text-muted:    #94a3b8;
+    --input-bg:      #2a2a2a;
+    --input-border:  #3a3a3a;
+    --modal-bg:      #1e1e1e;
+    --shadow:        0 4px 24px rgba(0,0,0,0.40);
+    --theme-light:   rgba(255,102,0,0.15);
+    --theme-lighter: rgba(255,102,0,0.06);
+}
+
+/* ── Page ── */
+.tmpl-page { padding:24px; max-width:1400px; margin:0 auto; }
+
+.tmpl-page-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:24px; flex-wrap:wrap; gap:16px;
+}
+.tmpl-page-header h2 {
+    font-size:1.6rem; font-weight:700; color:var(--text-main);
+    margin:0; display:flex; align-items:center; gap:10px;
+}
+.tmpl-page-header h2 .icon-wrap {
+    width:42px; height:42px; border-radius:12px;
+    background:var(--theme-light);
+    display:inline-flex; align-items:center; justify-content:center;
+    color:var(--theme-color); font-size:1.1rem;
+}
+.header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+/* ── Buttons ── */
+.btn-theme {
+    background:linear-gradient(135deg,var(--theme-color),var(--theme-dark));
+    color:#fff !important; border:none; padding:9px 20px; border-radius:10px;
+    font-weight:600; font-size:.875rem;
+    display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+    transition:all .25s ease; box-shadow:0 4px 12px rgba(255,102,0,.25);
+    text-decoration:none;
+}
+.btn-theme:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(255,102,0,.35); color:#fff !important; }
+
+.btn-outline-theme {
+    background:transparent; color:var(--theme-color) !important;
+    border:2px solid var(--theme-color); padding:8px 18px; border-radius:10px;
+    font-weight:600; font-size:.875rem;
+    display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+    transition:all .25s ease; text-decoration:none;
+}
+.btn-outline-theme:hover { background:var(--theme-color); color:#fff !important; transform:translateY(-2px); }
+
+/* ── Stats ── */
+.stats-row {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:16px; margin-bottom:24px;
+}
+.stat-chip {
+    background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:12px; padding:16px 20px;
+    display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
+}
+.stat-chip .stat-icon {
+    width:44px; height:44px; border-radius:10px; background:var(--theme-light);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--theme-color); font-size:1.1rem; flex-shrink:0;
+}
+.stat-chip .stat-val  { font-size:1.4rem; font-weight:700; color:var(--text-main); line-height:1; }
+.stat-chip .stat-label{ font-size:.78rem; color:var(--text-muted); margin-top:3px; }
+
+/* ── Card ── */
+.tmpl-card {
+    background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+    transition:background .3s, border-color .3s;
+}
+.table-toolbar {
+    padding:16px 20px; border-bottom:1px solid var(--card-border);
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.search-wrap { position:relative; flex:1; min-width:200px; max-width:360px; }
+.search-wrap i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; pointer-events:none; }
+.search-input {
+    width:100%; padding:9px 14px 9px 36px;
+    border:1.5px solid var(--input-border); border-radius:9px;
+    background:var(--input-bg); color:var(--text-main); font-size:.875rem;
+    transition:all .2s ease;
+}
+.search-input:focus { outline:none; border-color:var(--theme-color); box-shadow:0 0 0 3px rgba(255,102,0,.12); }
+.search-input::placeholder { color:var(--text-muted); }
+
+/* ── Table ── */
+.tmpl-table-wrap { overflow-x:auto; }
+.tmpl-table { width:100%; border-collapse:separate; border-spacing:0; font-size:.875rem; color:var(--text-main); }
+.tmpl-table thead tr th {
+    background:var(--tbl-head-bg); padding:13px 16px; text-align:left;
+    font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--text-muted); border-bottom:1px solid var(--card-border); white-space:nowrap;
+}
+.tmpl-table tbody tr td {
+    padding:12px 16px; border-bottom:1px solid var(--card-border);
+    vertical-align:middle; color:var(--text-main); transition:background .15s;
+}
+.tmpl-table tbody tr:last-child td { border-bottom:none; }
+.tmpl-table tbody tr:hover td { background:var(--tbl-hover); }
+
+/* identifier pill */
+.id-pill {
+    display:inline-block; background:var(--theme-lighter);
+    color:var(--theme-color); border:1px solid rgba(255,102,0,.2);
+    border-radius:8px; padding:3px 10px; font-weight:600; font-size:.8rem;
+}
+/* template-type badge */
+.type-badge {
+    padding:4px 11px; border-radius:20px; font-size:.73rem; font-weight:600;
+    display:inline-flex; align-items:center; gap:4px;
+}
+.type-trans   { background:rgba(16,185,129,.12); color:#10b981; }
+.type-promo   { background:rgba(249,115,22,.12);  color:#f97316; }
+.type-simp    { background:rgba(99,102,241,.12);  color:#6366f1; }
+.type-sexp    { background:rgba(234,179,8,.12);   color:#ca8a04; }
+.type-default { background:rgba(100,116,139,.12); color:#64748b; }
+
+/* action buttons */
+.tbl-btn {
+    width:34px; height:34px; border-radius:8px;
+    border:1.5px solid var(--card-border); background:var(--card-bg);
+    color:var(--text-muted);
+    display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:.85rem; transition:all .2s ease; text-decoration:none;
+}
+.tbl-btn:hover { background:var(--theme-color); color:#fff !important; border-color:var(--theme-color); transform:translateY(-1px); }
+.tbl-btn.danger:hover { background:#ef4444; border-color:#ef4444; }
+
+/* empty state */
+.empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
+.empty-state i { font-size:3rem; margin-bottom:14px; opacity:.35; }
+
+/* ── Modal ── */
+.modal-content {
+    background:var(--modal-bg) !important; border:1px solid var(--card-border) !important;
+    border-radius:18px !important; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.18) !important; color:var(--text-main) !important;
+}
+.modal-header {
+    background:linear-gradient(135deg,var(--theme-color),var(--theme-dark)) !important;
+    color:#fff !important; padding:18px 24px !important; border-bottom:none !important;
+}
+.modal-header .modal-title { font-weight:700; font-size:1rem; }
+.modal-header .btn-close { filter:brightness(0) invert(1); opacity:.85; }
+.modal-header .btn-close:hover { opacity:1; }
+.modal-body   { padding:24px !important; background:var(--modal-bg) !important; }
+.modal-footer { padding:16px 24px !important; border-top:1px solid var(--card-border) !important; background:var(--modal-bg) !important; }
+
+.modal-body .form-label {
+    font-weight:600; font-size:.8rem; text-transform:uppercase;
+    letter-spacing:.04em; color:var(--text-muted); margin-bottom:5px;
+}
+.modal-body .form-control,
+.modal-body .form-select {
+    background:var(--input-bg) !important; border:1.5px solid var(--input-border) !important;
+    border-radius:9px !important; color:var(--text-main) !important;
+    padding:9px 13px !important; font-size:.875rem;
+    transition:border-color .2s, box-shadow .2s;
+}
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color:var(--theme-color) !important;
+    box-shadow:0 0 0 3px rgba(255,102,0,.12) !important; outline:none;
+}
+.modal-body .form-control::placeholder { color:var(--text-muted); }
+.modal-body .form-control[readonly] { opacity:.6; cursor:not-allowed; }
+.form-check-input:checked { background-color:var(--theme-color) !important; border-color:var(--theme-color) !important; }
+
+/* error hint under field */
+.field-error { font-size:.78rem; color:#ef4444; margin-top:4px; display:none; }
+.field-error.show { display:block; }
+
+/* import instructions */
+.import-box {
+    background:var(--theme-lighter); border:1px solid rgba(255,102,0,.15);
+    border-radius:10px; padding:14px 16px; font-size:.85rem;
+    color:var(--text-main); margin-bottom:16px;
+}
+.import-box strong { color:var(--theme-color); }
+.col-ref-table { font-size:.8rem; }
+.col-ref-table thead th {
+    background:var(--tbl-head-bg) !important; color:var(--text-muted) !important;
+    font-size:.74rem; text-transform:uppercase; letter-spacing:.04em;
+    border-color:var(--card-border) !important;
+}
+.col-ref-table tbody td { color:var(--text-main) !important; border-color:var(--card-border) !important; background:var(--modal-bg) !important; }
+
+@media(max-width:640px){
+    .tmpl-page { padding:14px; }
+    .stats-row { grid-template-columns:1fr 1fr; }
+    .tmpl-table thead tr th,
+    .tmpl-table tbody tr td { padding:9px 10px; }
+}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<!-- Existing identifiers & template IDs for duplicate check -->
+<script>
+const EXISTING_IDENTIFIERS = [{% for t in templates %}"{{ t.template_identifier|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const EXISTING_TMPL_IDS    = [{% for t in templates %}"{{ t.dlt_template_id|default:''|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+</script>
+
+<div class="tmpl-page">
+
+    <!-- Page Header -->
+    <div class="tmpl-page-header">
+        <h2>
+            <span class="icon-wrap"><i class="fas fa-file-alt"></i></span>
+            Message Templates
+        </h2>
+        <div class="header-actions">
+            <button class="btn-outline-theme" data-bs-toggle="modal" data-bs-target="#importTemplateModal">
+                <i class="fas fa-file-import"></i> Import Templates
+            </button>
+            <button class="btn-theme" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
+                <i class="fas fa-plus"></i> Add Template
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-chip">
+            <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+            <div>
+                <div class="stat-val">{{ templates|length }}</div>
+                <div class="stat-label">Total Templates</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+            <div>
+                <div class="stat-val">{{ user_senders|length }}</div>
+                <div class="stat-label">Available Senders</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="stat-icon"><i class="fas fa-building"></i></div>
+            <div>
+                <div class="stat-val">{{ user_company.name|default:"—" }}</div>
+                <div class="stat-label">Company</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="tmpl-card">
+        <div class="table-toolbar">
+            <div class="search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" id="tmplSearch"
+                       placeholder="Search identifier, sender, template ID…">
+            </div>
+        </div>
+
+        <div class="tmpl-table-wrap">
+            <table class="tmpl-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Identifier</th>
+                        <th>Sender</th>
+                        <th>Template ID</th>
+                        <th>Template Type</th>
+                        <th>End Date</th>
+                        <th>Last Updated</th>
+                        <th style="text-align:center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tmplTableBody">
+                    {% for t in templates %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><span class="id-pill">{{ t.template_identifier }}</span></td>
+                        <td>{{ t.sender.sender_name|default:"—" }}</td>
+                        <td>{{ t.dlt_template_id|default:"—" }}</td>
+                        <td>
+                            {% if t.dlt_template_type == "transactional" %}
+                                <span class="type-badge type-trans"><i class="fas fa-circle" style="font-size:.45rem;"></i>Transactional</span>
+                            {% elif t.dlt_template_type == "promotional" %}
+                                <span class="type-badge type-promo"><i class="fas fa-circle" style="font-size:.45rem;"></i>Promotional</span>
+                            {% elif t.dlt_template_type == "service_implicit" %}
+                                <span class="type-badge type-simp"><i class="fas fa-circle" style="font-size:.45rem;"></i>Service Implicit</span>
+                            {% elif t.dlt_template_type == "service_explicit" %}
+                                <span class="type-badge type-sexp"><i class="fas fa-circle" style="font-size:.45rem;"></i>Service Explicit</span>
+                            {% else %}
+                                <span class="type-badge type-default">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ t.end_date|default:"—" }}</td>
+                        <td>{{ t.last_updated_date|date:"d M Y, H:i" }}</td>
+                        <td style="text-align:center;">
+                            <button class="tbl-btn" onclick="openEditTemplateModal({{ t.id }})" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-file-alt d-block"></i>
+                                <div style="font-size:1rem;font-weight:600;margin-bottom:6px;">No Templates Found</div>
+                                <div style="font-size:.85rem;">Click <strong>Add Template</strong> to get started.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ─────── Add Template Modal ─────── -->
+<div class="modal fade" id="addTemplateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Message Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_message_template' %}" id="addTemplateForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">User</label>
+                            <input type="text" class="form-control" value="{{ request.user.username }}" readonly>
+                            <input type="hidden" name="user_id" value="{{ request.user.id }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sender <span style="font-weight:400;text-transform:none;font-size:.78rem;">(optional)</span></label>
+                            <select name="sender_id" class="form-select">
+                                <option value="">— Select Sender —</option>
+                                {% for s in user_senders %}
+                                <option value="{{ s.sender_id }}">{{ s.sender_name }}{% if s.peid %} (PE ID: {{ s.peid }}){% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Identifier <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="template_identifier" id="addIdentifier"
+                                   class="form-control" placeholder="Unique name e.g. OTP_MSG" required>
+                            <div class="field-error" id="addIdentifierErr">This identifier already exists.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Message Template <span style="color:#ef4444;">*</span></label>
+                            <textarea name="message_template" class="form-control" rows="3" required
+                                      placeholder="Use {VARIABLE} for dynamic content e.g. Your OTP is {OTP}"></textarea>
+                            <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Use {VAR_NAME} format for variables (e.g. {OTP}, {ORDER_ID})</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Template ID</label>
+                            <input type="text" name="dlt_template_id" id="addTmplId"
+                                   class="form-control" placeholder="e.g. T123456">
+                            <div class="field-error" id="addTmplIdErr">This Template ID already exists.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Template Type</label>
+                            <select name="dlt_template_type" class="form-select">
+                                <option value="">— Select Type —</option>
+                                <option value="transactional">Transactional</option>
+                                <option value="promotional">Promotional</option>
+                                <option value="service_implicit">Service Implicit</option>
+                                <option value="service_explicit">Service Explicit</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" value="{{ today|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">End Date <span style="font-weight:400;text-transform:none;font-size:.78rem;">(optional)</span></label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-outline-theme" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme"><i class="fas fa-save me-1"></i> Add Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ─────── Import Modal ─────── -->
+<div class="modal fade" id="importTemplateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-import me-2"></i>Import Templates from Excel / CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'import_templates' %}" enctype="multipart/form-data" id="importTemplateForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="import-box">
+                        <strong>Instructions</strong><br>
+                        1. Download the sample template below<br>
+                        2. Fill in the required columns<br>
+                        3. Upload the completed file<br>
+                        <span style="font-size:.8rem;">All imported templates will be assigned to <strong>{{ request.user.username }}</strong></span>
+                    </div>
+                    <a href="{% url 'download_template_sample' %}" class="btn-outline-theme d-inline-flex mb-4" style="font-size:.82rem;">
+                        <i class="fas fa-download me-1"></i> Download Sample Template
+                    </a>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">User</label>
+                            <input type="text" class="form-control" value="{{ request.user.username }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Available Senders</label>
+                            <div class="form-control" style="height:auto;min-height:42px;">
+                                {% for s in user_senders %}
+                                    <span style="display:inline-block;background:var(--theme-light);color:var(--theme-color);border-radius:6px;padding:2px 8px;font-size:.78rem;margin:2px;">{{ s.sender_name }}</span>
+                                {% empty %}
+                                    <span style="color:#ef4444;font-size:.82rem;">No senders found.</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload Excel / CSV File</label>
+                        <input type="file" name="template_file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                    </div>
+                    <table class="table table-bordered col-ref-table">
+                        <thead>
+                            <tr><th>Column</th><th>Required</th><th>Description</th><th>Example</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>template_identifier</code></td><td>✅ Yes</td><td>Unique identifier for the template</td><td><code>WELCOME_MSG</code></td></tr>
+                            <tr><td><code>message_template</code></td><td>✅ Yes</td><td>Message content (use {VAR} for variables)</td><td><code>Hello {NAME}!</code></td></tr>
+                            <tr><td><code>senders</code></td><td>❌ Optional</td><td>Sender names separated by commas, or ALL_SENDERS</td><td><code>SEND1,SEND2</code></td></tr>
+                            <tr><td><code>dlt_template_id</code></td><td>❌ Optional</td><td>Template ID from DLT provider</td><td><code>T123456</code></td></tr>
+                            <tr><td><code>dlt_template_type</code></td><td>❌ Optional</td><td>Transactional / Promotional / Service Implicit / Service Explicit</td><td><code>Transactional</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-outline-theme" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme"><i class="fas fa-upload me-1"></i> Import Templates</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal Container -->
+<div id="editTemplateModalContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+/* ── SweetAlert helpers ── */
+function showErr(msg)  { Swal.fire({ icon:'error',   title:'Error',   html:msg, confirmButtonColor:'var(--theme-color)', confirmButtonText:'OK' }); }
+function showOk(msg)   { Swal.fire({ icon:'success', title:'Success', html:msg, confirmButtonColor:'var(--theme-color)', confirmButtonText:'OK' }).then(r => { if(r.isConfirmed) location.reload(); }); }
+function showWarn(msg) { Swal.fire({ icon:'warning', title:'Warning', html:msg, confirmButtonColor:'var(--theme-color)', confirmButtonText:'OK' }); }
+
+/* ── Live search ── */
+document.getElementById('tmplSearch').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#tmplTableBody tr').forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+/* ── Duplicate checks ── */
+function isDupIdentifier(val, excludeIdx) {
+    return EXISTING_IDENTIFIERS.some((v, i) => i !== excludeIdx && v.toLowerCase() === val.toLowerCase());
+}
+function isDupTmplId(val, excludeIdx) {
+    if (!val) return false;
+    return EXISTING_TMPL_IDS.some((v, i) => i !== excludeIdx && v !== '' && v.toLowerCase() === val.toLowerCase());
+}
+
+/* ── Add form live validation ── */
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* Django messages */
+    {% if template_messages %}
+        {% for m in template_messages %}
+            {% if m.level == 40 %}showErr("{{ m.message|safe }}");
+            {% elif m.level == 25 %}showOk("{{ m.message|safe }}");
+            {% elif m.level == 30 %}showWarn("{{ m.message|safe }}");
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    const addIdentifier = document.getElementById('addIdentifier');
+    const addTmplId     = document.getElementById('addTmplId');
+    const addIdErr      = document.getElementById('addIdentifierErr');
+    const addTidErr     = document.getElementById('addTmplIdErr');
+
+    addIdentifier.addEventListener('blur', function () {
+        const dup = isDupIdentifier(this.value.trim(), -1);
+        addIdErr.classList.toggle('show', dup);
+    });
+
+    addTmplId.addEventListener('blur', function () {
+        const dup = isDupTmplId(this.value.trim(), -1);
+        addTidErr.classList.toggle('show', dup);
+    });
+
+    document.getElementById('addTemplateForm').addEventListener('submit', function (e) {
+        const id  = addIdentifier.value.trim();
+        const tid = addTmplId.value.trim();
+        if (!id) { e.preventDefault(); showErr("Identifier is required."); return; }
+        if (isDupIdentifier(id, -1)) {
+            e.preventDefault();
+            addIdErr.classList.add('show');
+            showErr("An template with this identifier already exists. Please use a unique identifier."); return;
+        }
+        if (isDupTmplId(tid, -1)) {
+            e.preventDefault();
+            addTidErr.classList.add('show');
+            showErr("This Template ID already exists. Please use a unique Template ID."); return;
+        }
+    });
+
+    /* Import form */
+    document.getElementById('importTemplateForm').addEventListener('submit', function (e) {
+        const fi  = this.querySelector('input[name="template_file"]');
+        if (!fi.files.length) { e.preventDefault(); showErr("Please select a file."); return; }
+        const ext = fi.files[0].name.split('.').pop().toLowerCase();
+        if (!['xlsx','xls','csv'].includes(ext)) { e.preventDefault(); showErr("Upload only .xlsx, .xls or .csv files."); fi.value=''; }
+    });
+});
+
+/* ── Edit modal ── */
+function openEditTemplateModal(id) {
+    Swal.fire({ title:'Loading…', allowOutsideClick:false, didOpen:() => Swal.showLoading() });
+    fetch(`/message-template/get/${id}/`, { headers:{'X-Requested-With':'XMLHttpRequest'} })
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(d => { Swal.close(); d.error ? showErr(d.error) : buildEditModal(d); })
+        .catch(() => { Swal.close(); showErr('Failed to load template data.'); });
+}
+
+function buildEditModal(d) {
+    const mid = `editTmplModal${d.template_id}`;
+    const fid = `editTmplForm${d.template_id}`;
+
+    const senders = [{% for s in user_senders %}{ id:"{{ s.sender_id }}", name:"{{ s.sender_name }}", peid:"{{ s.peid|default:'' }}" }{% if not forloop.last %},{% endif %}{% endfor %}];
+    const types   = [['','— Select Type —'],['transactional','Transactional'],['promotional','Promotional'],['service_implicit','Service Implicit'],['service_explicit','Service Explicit']];
+
+    const senderOpts = senders.map(s => `<option value="${s.id}" ${d.sender_id==s.id?'selected':''}>${s.name}${s.peid?' (PE ID: '+s.peid+')':''}</option>`).join('');
+    const typeOpts   = types.map(([v,l]) => `<option value="${v}" ${d.dlt_template_type==v?'selected':''}>${l}</option>`).join('');
+
+    /* index of this record so we exclude it from dup checks */
+    const selfIdx = EXISTING_IDENTIFIERS.indexOf(d.template_identifier);
+
+    document.getElementById('editTemplateModalContainer').innerHTML = `
+    <div class="modal fade" id="${mid}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-pen me-2"></i>Edit Template</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="${fid}">
+            <div class="modal-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">User</label>
+                  <input type="text" class="form-control" value="{{ request.user.username }}" readonly>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Sender</label>
+                  <select name="sender_id" class="form-select"><option value="">— Select Sender —</option>${senderOpts}</select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Identifier <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="template_identifier" class="form-control edit-identifier"
+                         value="${d.template_identifier}" required>
+                  <div class="field-error" id="editIdErr${d.template_id}">This identifier already exists.</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Message Template <span style="color:#ef4444;">*</span></label>
+                  <textarea name="message_template" class="form-control" rows="3" required>${d.message_template}</textarea>
+                  <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Use {VAR_NAME} for variables e.g. {OTP}</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Template ID</label>
+                  <input type="text" name="dlt_template_id" class="form-control edit-tmpl-id"
+                         value="${d.dlt_template_id||''}">
+                  <div class="field-error" id="editTidErr${d.template_id}">This Template ID already exists.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Template Type</label>
+                  <select name="dlt_template_type" class="form-select">${typeOpts}</select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Start Date</label>
+                  <input type="date" name="start_date" class="form-control" value="${d.start_date||''}">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">End Date <span style="font-weight:400;text-transform:none;font-size:.78rem;">(optional)</span></label>
+                  <input type="date" name="end_date" class="form-control" value="${d.end_date||''}">
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-outline-theme" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn-theme"><i class="fas fa-save me-1"></i> Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>`;
+
+    const modalEl = document.getElementById(mid);
+    const modal   = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    const idInput  = modalEl.querySelector('.edit-identifier');
+    const tidInput = modalEl.querySelector('.edit-tmpl-id');
+    const idErr    = document.getElementById(`editIdErr${d.template_id}`);
+    const tidErr   = document.getElementById(`editTidErr${d.template_id}`);
+
+    idInput.addEventListener('blur',  () => idErr.classList.toggle('show',  isDupIdentifier(idInput.value.trim(),  selfIdx)));
+    tidInput.addEventListener('blur', () => tidErr.classList.toggle('show', isDupTmplId(tidInput.value.trim(), selfIdx)));
+
+    document.getElementById(fid).addEventListener('submit', function (e) {
+        e.preventDefault();
+        const identifier = idInput.value.trim();
+        const tmplId     = tidInput.value.trim();
+        const msgBody    = modalEl.querySelector('textarea[name="message_template"]').value.trim();
+
+        if (!identifier) { showErr("Identifier is required."); return; }
+        if (!msgBody)    { showErr("Message template content is required."); return; }
+        if (isDupIdentifier(identifier, selfIdx)) { idErr.classList.add('show'); showErr("This identifier already exists. Please use a unique identifier."); return; }
+        if (isDupTmplId(tmplId, selfIdx))         { tidErr.classList.add('show'); showErr("This Template ID already exists. Please use a unique Template ID."); return; }
+
+        Swal.fire({ title:'Saving…', allowOutsideClick:false, didOpen:() => Swal.showLoading() });
+        const fd = new FormData(this);
+        fd.append('csrfmiddlewaretoken','{{ csrf_token }}');
+
+        fetch(`/message-template/edit/${d.template_id}/`, { method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'} })
+            .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+            .then(data => { Swal.close(); data.success ? (modal.hide(), showOk(data.message||'Template updated.')) : showErr(data.message||'Update failed.'); })
+            .catch(() => { Swal.close(); showErr('Failed to update template.'); });
+    });
+}
+</script>
+{% endblock %}

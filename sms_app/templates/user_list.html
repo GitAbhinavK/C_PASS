@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User List{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h4>Users</h4>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="data-table-container">
+      <table class="data-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th>Company</th>
+                        <th>Role</th>
+                        <!-- <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Start Hour</th>
+                        <th>End Hour</th> -->
+                        <th>DLT Entity ID</th>
+                        <!-- <th>SMPP Enabled</th>
+                        <th>Hide Pricing</th> -->
+                        <th>SMPP Bind Mode</th>
+                        <th>SMPP Sessions</th>
+                        <th>SMPP TPS</th>
+                        <th>SMPP Port</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'edit_user' user.user_id %}" class="text-decoration-none fw-semibold">
+                                    {{ user.username }}
+                                </a>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.full_name|default:"-" }}</td>
+                            <td>{% if user.company %}{{ user.company.company_name }}{% else %}-{% endif %}</td>
+                            <td>{% if user.role %}{{ user.role.role_name }}{% else %}-{% endif %}</td>
+                            <!-- <td>{{ user.join_date|date:"d M, Y" }}</td>
+                            <td>{{ user.expiry_date|default:"-"|date:"d M, Y" }}</td>
+                            <td>{{ user.sms_posting_start_hour|default:"-" }}</td>
+                            <td>{{ user.sms_posting_end_hour|default:"-" }}</td> -->
+                            <td>{{ user.dlt_entity_id|default:"-" }}</td>
+                            <!-- <td>{{ user.smpp_enabled|yesno:"Yes,No" }}</td>
+                            <td>{{ user.hide_pricing|yesno:"Yes,No" }}</td> -->
+                            <td>{{ user.smpp_bind_mode|default:"-" }}</td>
+                            <td>{{ user.smpp_sessions|default:"-" }}</td>
+                            <td>{{ user.smpp_tps|default:"-" }}</td>
+                            <td>{{ user.smpp_port|default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="16" class="text-center text-muted">No users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+/* Professional Table Styling */
+.table-hover tbody tr:hover {
+    background-color: var(--theme-color);
+    transition: background-color 0.2s ease-in-out;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--theme-color);
+}
+
+.table th, .table td {
+    vertical-align: middle;
+    padding: 12px 10px;
+    font-size: 13px;
+}
+
+.table-dark {
+    background-color: var(--theme-color) !important;
+    color: #fff;
+    font-weight: 600;
+}
+
+.text-orange {
+    color: var(--theme-color) !important;
+}
+
+a {
+    color: var(--theme-color);
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--theme-color);
+    text-decoration: underline;
+}
+
+/* Card Styling */
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Responsive Table */
+@media (max-width: 1200px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+}
+</style>
+{% endblock %}

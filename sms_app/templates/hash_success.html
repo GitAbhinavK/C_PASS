@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+    <h3>✅ Hash Generated Successfully</h3>
+
+    <table class="table table-bordered">
+        <tr><th>User</th><td>{{ hash.user.username }}</td></tr>
+        <tr><th>Type</th><td>{{ hash.type }}</td></tr>
+        <tr><th>Hash</th><td>{{ hash.hash_key }}</td></tr>
+
+        {% if hash.type == "ON" %}
+            <tr><th>Entity ID</th><td>{{ hash.entity_id }}</td></tr>
+            <tr><th>Template ID</th><td>{{ hash.template_id }}</td></tr>
+        {% else %}
+            <tr><th>Provider</th><td>{{ hash.provider }}</td></tr>
+            <tr><th>Packet TM ID</th><td>{{ hash.packet_tm_id }}</td></tr>
+        {% endif %}
+
+        <tr><th>Created</th><td>{{ hash.created_at }}</td></tr>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,580 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Company Management{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h4>🏢 Company Management</h4>
+    </div>
+    <button class="btn btn-light btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addCompanyModal">
+      <i class="fas fa-plus-circle me-1"></i> Add Company
+    </button>
+  </div>
+
+  <div class="page-content">
+    <div class="data-table-container">
+      <table class="data-table">
+        <thead class="table-dark">
+          <tr>
+            <th>S.No.</th>
+            <th>Logo</th>
+            <th>Favicon</th>
+            <th class="text-start">Name</th>
+            <th>Email</th>
+            <th>Mobile</th>
+            <th>Domain</th>
+            <th>Address</th>
+            <th>Theme</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+                        {% for c in companies %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {% if c.logo %}
+                                    <img src="{{ c.logo.url }}" alt="Logo" class="rounded-circle border logo-thumb">
+                                {% else %}
+                                    <i class="fas fa-industry text-muted icon-large"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if c.favicon %}
+                                    <img src="{{ c.favicon.url }}" alt="Favicon" class="favicon-img rounded logo-thumb">
+                                {% else %}
+                                    <i class="fas fa-globe text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-start fw-bold">{{ c.name }}</td>
+                            <td>{{ c.email }}</td>
+                            <td>{{ c.mobile|default:"—" }}</td>
+                            <td class="col-limit" title="{{ c.domain_name|default:'—' }}">
+                                {% if c.domain_name %}
+                                    <a href="{{ c.domain_name }}" target="_blank" class="text-theme">{{ c.domain_name }}</a>
+                                {% else %} — {% endif %}
+                            </td>
+                            <td class="col-limit" title="{{ c.address|default:'—' }}">
+                                {{ c.address|default:"—" }}
+                            </td>
+                            <td>
+                                <div class="theme-color-indicator" style="background-color:{{ c.attributes_1|default:'var(--theme-color)' }};" title="Theme Color: {{ c.attributes_1|default:'var(--theme-color)' }}"></div>
+                            </td>
+                            <td>{{ c.start_date|date:"d M Y"|default:"—" }}</td>
+                            <td>{{ c.end_date|date:"d M Y"|default:"—" }}</td>
+                            <td>
+                                {% if c.active_status %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-theme btn-sm" onclick="openEditCompanyModal({{ c.company_id }})" title="Edit Company">
+                                    <i class="fas fa-edit text-white"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Company Modal -->
+<div class="modal fade" id="addCompanyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header bg-theme text-white">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i> Add New Company</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data" action="{% url 'add_company' %}" id="addCompanyForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Company Name *</label>
+                            <input type="text" name="name" class="form-control mb-3" required>
+                            <label class="form-label fw-bold">Email *</label>
+                            <input type="email" name="email" class="form-control mb-3" required>
+                            <label class="form-label fw-bold">Mobile *</label>
+                            <div class="input-group mb-3">
+                                <select class="form-select country-code-select" name="country_code">
+                                    <option value="+91" selected>🇮🇳 +91</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+44">🇬🇧 +44</option>
+                                    <option value="+61">🇦🇺 +61</option>
+                                    <option value="+971">🇦🇪 +971</option>
+                                </select>
+                                <input 
+                                    type="text" 
+                                    name="mobile" 
+                                    class="form-control" 
+                                    placeholder="Enter mobile number"
+                                    maxlength="10"
+                                    pattern="[0-9]{10}"
+                                    required
+                                >
+                            </div>
+                            <label class="form-label fw-bold">Domain</label>
+                            <input type="url" name="domain_name" class="form-control mb-3">
+                            <label class="form-label fw-bold">Address *</label>
+                            <textarea name="address" class="form-control mb-3" rows="2" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Theme Color</label>
+                            <input type="color" name="theme_color" value="" class="form-control form-control-color mb-3">
+                            <!-- Status auto-filled as Active -->
+                            <input type="hidden" name="active_status" value="on">
+                            <label class="form-label fw-bold">Logo *</label>
+                            <input type="file" name="logo" class="form-control mb-3" accept="image/*" required>
+                            <label class="form-label fw-bold">Favicon *</label>
+                            <input type="file" name="favicon" class="form-control mb-3" accept="image/*" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-check-circle me-1"></i> Add Company</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Dynamic Edit Modal Container -->
+<div id="editCompanyModalContainer"></div>
+
+<script>
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+}
+
+// Get base URL
+function getBaseUrl() {
+    return window.location.origin;
+}
+
+// Process Django messages for company-specific notifications
+function processCompanyMessages() {
+    {% if company_messages %}
+        {% for message in company_messages %}
+            {% if message.level == 40 %}  {# ERROR #}
+                showCompanyValidationError("{{ message.message|safe }}");
+            {% elif message.level == 25 %}  {# SUCCESS #}
+                showCompanySuccessMessage("{{ message.message|safe }}");
+            {% elif message.level == 30 %}  {# WARNING #}
+                showCompanyWarningMessage("{{ message.message|safe }}");
+            {% elif message.level == 20 %}  {# INFO #}
+                showCompanyInfoMessage("{{ message.message|safe }}");
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+}
+
+// Clear company messages after processing
+function clearCompanyMessages() {
+    console.log('Company messages have been processed');
+}
+
+// Show SweetAlert for company validation errors
+function showCompanyValidationError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Company Error',
+        html: message,
+        confirmButtonColor: '#e65100',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
+    });
+    return false;
+}
+
+// Show success message for companies
+function showCompanySuccessMessage(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        html: message,
+        confirmButtonColor: '#e65100',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.reload();
+        }
+    });
+}
+
+// Show warning message for companies
+function showCompanyWarningMessage(message) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        html: message,
+        confirmButtonColor: '#e65100',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
+    });
+}
+
+// Show info message for companies
+function showCompanyInfoMessage(message) {
+    Swal.fire({
+        icon: 'info',
+        title: 'Information',
+        html: message,
+        confirmButtonColor: '#e65100',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
+    });
+}
+
+// Open edit modal for a specific company
+function openEditCompanyModal(companyId) {
+    console.log('Opening edit modal for company ID:', companyId);
+    
+    // Show loading
+    Swal.fire({
+        title: 'Loading company data...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Construct the correct URL for fetching company data
+    const baseUrl = getBaseUrl();
+    const fetchUrl = `${baseUrl}/companies/get/${companyId}/`;
+    
+    console.log('Fetching from URL:', fetchUrl);
+    
+    // Fetch company data
+    fetch(fetchUrl, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Received data:', data);
+        Swal.close();
+        
+        if (data.error) {
+            showCompanyValidationError(data.error);
+            return;
+        }
+        
+        createEditCompanyModal(data);
+    })
+    .catch(error => {
+        Swal.close();
+        console.error('Fetch error:', error);
+        showCompanyValidationError('Failed to load company data. Please try again.');
+    });
+}
+
+// Create and show edit modal
+function createEditCompanyModal(companyData) {
+    const modalId = `editCompanyModal${companyData.company_id}`;
+    const formId = `editCompanyForm${companyData.company_id}`;
+    
+    // Parse mobile number (remove country code if present)
+    let mobileNumber = companyData.mobile || '';
+    let countryCode = '+91'; // default
+    
+    if (mobileNumber.includes(' ')) {
+        const parts = mobileNumber.split(' ');
+        if (parts.length > 1) {
+            countryCode = parts[0];
+            mobileNumber = parts.slice(1).join(' ');
+        }
+    }
+    
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content rounded-4 shadow-lg">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i> Edit Company - ${companyData.name}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="${formId}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${getCSRFToken()}">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Company Name *</label>
+                                    <input type="text" name="name" class="form-control mb-3" value="${companyData.name}" required>
+                                    
+                                    <label class="form-label fw-bold">Email *</label>
+                                    <input type="email" name="email" class="form-control mb-3" value="${companyData.email}" required>
+                                    
+                                    <label class="form-label fw-bold">Mobile *</label>
+                                    <div class="input-group mb-3">
+                                        <select class="form-select edit-country-code" style="max-width: 120px;">
+                                            <option value="+91" ${countryCode === '+91' ? 'selected' : ''}>🇮🇳 +91</option>
+                                            <option value="+1" ${countryCode === '+1' ? 'selected' : ''}>🇺🇸 +1</option>
+                                            <option value="+44" ${countryCode === '+44' ? 'selected' : ''}>🇬🇧 +44</option>
+                                            <option value="+61" ${countryCode === '+61' ? 'selected' : ''}>🇦🇺 +61</option>
+                                            <option value="+971" ${countryCode === '+971' ? 'selected' : ''}>🇦🇪 +971</option>
+                                        </select>
+                                        <input 
+                                            type="text" 
+                                            name="mobile" 
+                                            class="form-control edit-mobile" 
+                                            value="${mobileNumber}"
+                                            placeholder="Enter mobile number"
+                                            maxlength="10"
+                                            pattern="[0-9]{10}"
+                                            required
+                                        >
+                                    </div>
+                                    <input type="hidden" name="mobile_full" id="mobileFull${companyData.company_id}">
+                                    
+                                    <label class="form-label fw-bold">Domain</label>
+                                    <input type="url" name="domain_name" class="form-control mb-3" value="${companyData.domain_name || ''}">
+                                    
+                                    <label class="form-label fw-bold">Address *</label>
+                                    <textarea name="address" class="form-control mb-3" rows="2" required>${companyData.address}</textarea>
+                                    
+                                    <label class="form-label fw-bold">Start Date</label>
+                                    <input type="date" name="start_date" class="form-control mb-3" value="${companyData.start_date}" disabled>
+                                    
+                                    <label class="form-label fw-bold">End Date</label>
+                                    <input type="date" name="end_date" class="form-control mb-3" value="${companyData.end_date || ''}" min="${new Date().toISOString().split('T')[0]}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Theme Color</label>
+                                    <input type="color" name="theme_color" value="${companyData.theme_color}" class="form-control form-control-color mb-3">
+                                    
+                                    <label class="form-label fw-bold">Allowed IP</label>
+                                    <input type="text" name="allowed_ip" class="form-control mb-3" value="${companyData.allowed_ip || ''}" placeholder="Optional IP restriction">
+                                    
+                                    <label class="form-label fw-bold d-block">Status</label>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" name="active_status" id="edit-status-${companyData.company_id}" ${companyData.active_status ? 'checked' : ''}>
+                                        <label class="form-check-label" for="edit-status-${companyData.company_id}">Active / Inactive</label>
+                                    </div>
+                                    
+                                    <label class="form-label fw-bold">Logo (Optional - Leave blank to keep current)</label>
+                                    <input type="file" name="logo" class="form-control mb-3" accept="image/*">
+                                    
+                                    <label class="form-label fw-bold">Favicon (Optional - Leave blank to keep current)</label>
+                                    <input type="file" name="favicon" class="form-control mb-3" accept="image/*">
+                                    
+                                    <div class="d-flex gap-3 mt-4 align-items-center">
+                                        <p class="mb-0 text-muted me-2">Current Images:</p>
+                                        ${companyData.has_logo ? 
+                                            `<img src="${companyData.logo_url}" alt="Logo" width="48" height="48" class="rounded border">` : 
+                                            `<span class="text-muted">No Logo</span>`
+                                        }
+                                        ${companyData.has_favicon ? 
+                                            `<img src="${companyData.favicon_url}" alt="Favicon" width="32" height="32" class="rounded ms-3">` : 
+                                            `<span class="text-muted ms-3">No Favicon</span>`
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Save Changes</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to container
+    document.getElementById('editCompanyModalContainer').innerHTML = modalHtml;
+    
+    // Show modal with smooth animation
+    const editModalElement = document.getElementById(modalId);
+    const editModal = new bootstrap.Modal(editModalElement, {
+        backdrop: 'static',
+        keyboard: false
+    });
+    
+    // Show modal after a small delay to ensure DOM is ready
+    setTimeout(() => {
+        editModal.show();
+        
+        // Fix for blinking issue - ensure backdrop is properly attached
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.style.opacity = '0.5';
+        }
+    }, 50);
+    
+    // Add event listener for status change to auto-fill end date
+    const statusCheckbox = editModalElement.querySelector(`#edit-status-${companyData.company_id}`);
+    const endDateInput = editModalElement.querySelector('input[name="end_date"]');
+    
+    if (statusCheckbox && endDateInput) {
+        statusCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // When status becomes active, set end date to current date
+                const today = new Date().toISOString().split('T')[0];
+                endDateInput.value = today;
+            } else {
+                // When status becomes inactive, clear end date
+                endDateInput.value = '';
+            }
+        });
+    }
+    
+    // Set up form submission
+    const editForm = document.getElementById(formId);
+    
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Combine country code and mobile number
+        const countryCode = editModalElement.querySelector('.edit-country-code').value;
+        const mobileNumber = editModalElement.querySelector('.edit-mobile').value.trim();
+        const mobileFull = `${countryCode} ${mobileNumber}`;
+        
+        // Validate mobile number
+        if (mobileNumber && !/^\d{10}$/.test(mobileNumber)) {
+            showCompanyValidationError("Mobile number must be 10 digits");
+            editModalElement.querySelector('.edit-mobile').focus();
+            return;
+        }
+        
+        // Show loading
+        Swal.fire({
+            title: 'Saving changes...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Submit form via AJAX - Use the correct URL pattern
+        const formData = new FormData(editForm);
+        formData.append('mobile', mobileFull); // Add combined mobile number
+        
+        const editUrl = `${getBaseUrl()}/companies/edit/${companyData.company_id}/`;
+        
+        console.log('Submitting to URL:', editUrl);
+        
+        fetch(editUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            console.log('Edit response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.close();
+            if (data && data.success !== undefined) {
+                if (data.success) {
+                    editModal.hide();
+                    showCompanySuccessMessage(data.message || 'Company updated successfully.');
+                } else {
+                    showCompanyValidationError(data.message || 'Failed to update company.');
+                }
+            } else {
+                // Handle non-JSON response
+                console.error('Unexpected response format:', data);
+                editModal.hide();
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error('Edit error:', error);
+            showCompanyValidationError('Failed to update company. Please try again.');
+        });
+    });
+}
+
+// Validate add form
+function validateAddCompanyForm() {
+    const form = document.getElementById('addCompanyForm');
+    const mobileInput = form.querySelector('input[name="mobile"]');
+    const mobileValue = mobileInput.value.trim();
+    
+    if (mobileValue && !/^\d{10}$/.test(mobileValue)) {
+        showCompanyValidationError("Mobile number must be exactly 10 digits");
+        mobileInput.focus();
+        return false;
+    }
+    
+    return true;
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Company Management page loaded, initializing...');
+    
+    // Process any company messages that need to be shown as SweetAlerts
+    processCompanyMessages();
+    
+    // Set up validation for add form
+    const addCompanyForm = document.getElementById('addCompanyForm');
+    if (addCompanyForm) {
+        addCompanyForm.addEventListener('submit', function(e) {
+            if (!validateAddCompanyForm()) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Clear messages after they've been processed
+    setTimeout(clearCompanyMessages, 100);
+    
+    // Fix for modal backdrop issues
+    document.addEventListener('shown.bs.modal', function(event) {
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.style.opacity = '0.5';
+            backdrop.classList.add('show');
+        }
+    });
+    
+    document.addEventListener('hidden.bs.modal', function(event) {
+        // Clean up dynamic modals
+        const container = document.getElementById('editCompanyModalContainer');
+        if (container) {
+            container.innerHTML = '';
+        }
+        
+        // Remove backdrop if no other modals are open
+        const modals = document.querySelectorAll('.modal.show');
+        if (modals.length === 0) {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+});
+</script>
+{% endblock %}

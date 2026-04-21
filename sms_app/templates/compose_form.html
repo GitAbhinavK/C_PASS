@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Compose Message</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .card { border: 1px solid #ddd; padding: 12px; border-radius: 6px; max-width: 800px; }
+    .row { margin-bottom: 10px; }
+    .label { display:block; font-weight:bold; margin-bottom:4px; }
+    input[type=text], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+    .hint { color: #666; font-size: 12px; }
+    .btn { padding: 8px 14px; }
+  </style>
+</head>
+<body>
+  <h2>Compose Message (SMPP)</h2>
+  <div class="card">
+    <form method="post" action="{% url 'smpp_compose_submit' %}">
+      {% csrf_token %}
+
+      <div class="row">
+        <label class="label">SMPP ID (hardcoded)</label>
+        <input type="text" name="smpp_id" value="{{ smpp_id }}" readonly>
+      </div>
+
+      <div class="row">
+        <label class="label">PE ID</label>
+        <input type="text" name="pe_id" value="{{ pe_id }}" readonly>
+      </div>
+
+      <div class="row">
+        <label class="label">Sender ID</label>
+        <input type="text" name="sender_id" value="{{ sender_id }}" readonly>
+      </div>
+
+      <div class="row">
+        <label class="label">Template ID</label>
+        <input type="text" name="template_id" value="{{ template_id }}" readonly>
+      </div>
+
+      <div class="row">
+        <label class="label">Template text</label>
+        <textarea name="template_text" rows="3" readonly>{{ template_text }}</textarea>
+      </div>
+
+      <!-- ✅ Destination numbers free-text field -->
+      <div class="row">
+        <label class="label">Destination numbers</label>
+        <textarea name="numbers" rows="6" placeholder="Enter numbers like 918102070215, one per line or comma-separated"></textarea>
+        <div class="hint">You can enter 2, 4, 8... any count. Formats like 918102070215, separated by newline or comma.</div>
+      </div>
+
+      <!-- ✅ Compose button -->
+      <button class="btn" type="submit">Compose & Submit</button>
+    </form>
+  </div>
+
+  <p class="hint">Make sure SMPP ID {{ smpp_id }} is already bound and alive. Terminal will show submit_sm and deliver_sm DLR logs separately.</p>
+</body>
+</html>

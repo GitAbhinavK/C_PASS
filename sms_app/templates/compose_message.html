@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+
+:root {
+    --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+    --theme-light: {{ user_company.attributes_1|default:'#FF6600' }}33;
+    --theme-lighter: {{ user_company.attributes_1|default:'#FF6600' }}18;
+}
+
+.body-bg {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+.main-flex {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 46px;
+}
+
+/* --- LEFT (FORM) --- */
+.sms-form-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,40,100,0.11);
+    padding: 38px 48px 33px 48px;
+    width: 830px;
+}
+
+.sms-form-card h2 {
+    color: #282957;
+    font-size: 1.18em;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.form-group { flex: 1; display: flex; flex-direction: column; position: relative;}
+
+.form-group label { font-weight: 500; margin-bottom: 5px; color: #344054; }
+
+input[type="text"], select, textarea {
+    border: 1px solid #cfd8dc;
+    border-radius: 8px;
+    padding: 9px 11px;
+    margin-bottom: 8px;
+    background: #f8fafb;
+    font-size: 1em;
+}
+
+textarea { resize: vertical; }
+
+textarea:focus,
+input:focus,
+select:focus {
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px var(--theme-light);
+    outline: none;
+}
+
+.char-counter { font-size: 0.86em; color: #6b7280; }
+
+.toggles { align-items: center; margin-bottom: 17px; gap: 20px; }
+
+.toggle-group { display: flex; align-items: center; gap: 7px; margin-right: 12px; }
+
+.switch { position: relative; display: inline-block; width: 42px; height: 20px; }
+.switch input { display:none; }
+
+.slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background-color: #e0e7ef; transition: .4s; border-radius: 34px;
+}
+.slider:before {
+    position: absolute; content: ""; height: 16px; width: 16px;
+    left: 2px; bottom: 2px; background-color: white;
+    transition: .4s; border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--theme-color);
+}
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* SEND BUTTON — FULLY THEME */
+.send-btn {
+    display: block; width: 180px; margin: 22px auto 0;
+    background: var(--theme-color);
+    color: #fff; font-size: 1.15em; border: none;
+    border-radius: 25px; padding: 12px 0; cursor: pointer;
+    box-shadow: 0 4px 14px var(--theme-light);
+    transition: 0.2s;
+}
+.send-btn:hover {
+    opacity: 0.85;
+}
+
+/* REMOVE DUPLICATES BUTTON */
+.remove-dup-btn {
+    position: absolute; right:12px; top:42px;
+    background: var(--theme-color);
+    color:#fff;
+    border:none; border-radius:11px;
+    font-size:0.96em; padding:6px 14px;
+    cursor:pointer; z-index:1; transition:background .2s;
+}
+.remove-dup-btn:disabled { background:#ccc; color:#fff; cursor:not-allowed; opacity:0.7; }
+
+/* --- RIGHT (MOBILE PREVIEW SMALLER) --- */
+.iphone-preview {
+    position: relative;
+    width: 290px;
+    height: 620px;
+    background: var(--theme-lighter);
+    border-radius: 40px;
+    border: 3px solid var(--theme-light);
+    box-shadow: 0 6px 32px 0 var(--theme-light), 0 1.5px 3px var(--theme-light);
+    padding: 40px 12px 12px 12px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.iphone-notch {
+    position: absolute;
+    top: 14px; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 15px;
+    background: #fff;
+    border-radius: 12px 12px 22px 22px;
+    border: 1.3px solid #ececec;
+}
+
+.iphone-header {
+    margin-bottom: 20px; 
+    color: var(--theme-color);
+    font-size: 1.05em; font-weight:700; letter-spacing: 0.4px; text-align: center;
+}
+
+.iphone-time {
+    font-size: 0.9em; 
+    color: var(--theme-color);
+    text-align:center; 
+    margin-bottom: 10px;
+}
+
+.message-bubble {
+    align-self: flex-end;
+    background: linear-gradient(95deg, var(--theme-light) 70%, var(--theme-color) 100%);
+    color: #332105;
+    border-radius: 21px 21px 9px 21px;
+    min-width: 70px;
+    max-width: 90%;
+    padding: 12px 18px;
+    margin-bottom: 14px;
+    font-size: 1em;
+    box-shadow: 0 2.5px 14px var(--theme-light);
+}
+
+@media (max-width: 1000px) {
+    .main-flex { flex-direction: column; align-items: center; gap:36px;}
+    .sms-form-card, .iphone-preview { width:98%; max-width:430px; }
+    .iphone-preview { height:420px; padding-top:39px; }
+}
+</style>
+
+
+<div class="body-bg">
+<div class="main-flex">
+
+    <!-- LEFT: SMS FORM CARD -->
+    <div class="sms-form-card">
+      <h2>Send Quick SMS</h2>
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="sendType">Send Type</label>
+            <select id="sendType" name="sendType">
+              <option selected>Batch</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="senderId">Sender ID</label>
+            <select id="senderId" name="senderId">
+              <option value="">Select Sender</option>
+              {% for sender in senders %}
+                  <option value="{{ sender.sender_id }}">{{ sender.sender_id }} | {{ sender.sender_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="position:relative;">
+          <label for="mobileNumbers">Enter Mobile Numbers</label>
+          <textarea id="mobileNumbers" name="mobileNumbers" rows="2" placeholder="Separate each number with comma, space, or new line"></textarea>
+          <button type="button" id="removeDuplicatesBtn" class="remove-dup-btn">
+            0 of 0 duplicate removed
+          </button>
+        </div>
+
+        <div class="form-row toggles">
+          <div class="toggle-group">
+            <label>Enable Smart Link</label>
+            <label class="switch">
+              <input type="checkbox" name="enableSmartLink">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="toggle-group">
+            <label>Remove Duplicates</label>
+            <label class="switch">
+              <input type="checkbox" name="removeDuplicates" checked>
+              <span class="slider round on"></span>
+            </label>
+          </div>
+
+          <div class="toggle-group">
+            <label>Send as Flash SMS</label>
+            <label class="switch">
+              <input type="checkbox" name="flashSMS">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="textMsg">Text Message</label>
+          <textarea id="textMsg" name="textMsg" rows="3" placeholder="Your Text Message"></textarea>
+          <div class="char-counter">126 Characters = 1 SMS</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>DLT Templates List</label>
+            <input type="text" name="dltTemplateList" placeholder="Quick Loan1">
+          </div>
+
+          <div class="form-group">
+            <label>DLT Template ID</label>
+            <input type="text" name="dltTemplateId" placeholder="177267253121676786">
+          </div>
+        </div>
+
+        <button type="submit" class="send-btn">Send Text</button>
+      </form>
+    </div>
+
+    <!-- RIGHT: iPhone Preview -->
+    <div class="iphone-preview">
+        <div class="iphone-notch"></div>
+        <div class="iphone-header">XX-SENDER</div>
+        <div class="iphone-time">Today, 4:39 PM</div>
+        <div class="message-bubble" id="previewText">Your Message</div>
+    </div>
+
+</div>
+</div>
+
+<!-- JS unchanged (as requested) -->
+<script>
+function getNumbersFromText(text) {
+  return text.split(/[\n,\s]+/).map(s => s.trim()).filter(s => /^[0-9]{10}$/.test(s));
+}
+function removeDuplicates(arr) {
+  let unique = [], seen = {};
+  for (let n of arr) if (!seen[n]) { unique.push(n); seen[n] = true; }
+  return unique;
+}
+function updateDuplicateInfo() {
+  let textarea = document.getElementById('mobileNumbers');
+  let rawNumbers = getNumbersFromText(textarea.value);
+  let total = rawNumbers.length;
+  let uniqueNumbers = removeDuplicates(rawNumbers);
+  let removed = total - uniqueNumbers.length;
+  let btn = document.getElementById('removeDuplicatesBtn');
+  btn.textContent = `${removed} of ${total} duplicate removed`;
+  let toggle = document.querySelector('input[name="removeDuplicates"]');
+  btn.disabled = !(removed > 0 && toggle.checked);
+  btn.style.background = removed > 0 && toggle.checked ? 'var(--theme-color)' : '#ccc';
+  btn.style.opacity = removed > 0 && toggle.checked ? '1' : '0.7';
+}
+document.getElementById('mobileNumbers').addEventListener('input', updateDuplicateInfo);
+document.getElementById('removeDuplicatesBtn').addEventListener('click', function() {
+  let textarea = document.getElementById('mobileNumbers');
+  let rawNumbers = getNumbersFromText(textarea.value);
+  let uniqueNumbers = removeDuplicates(rawNumbers);
+  textarea.value = uniqueNumbers.join('\n');
+  updateDuplicateInfo();
+});
+document.querySelector('input[name="removeDuplicates"]').addEventListener('change', updateDuplicateInfo);
+updateDuplicateInfo();
+document.getElementById('textMsg').addEventListener('input', function() {
+  document.getElementById('previewText').textContent = this.value || 'Your Message';
+});
+</script>
+
+<script>
+document.getElementById('senderId').addEventListener('change', function() {
+    const senderId = this.value;
+    const textMsgField = document.getElementById('textMsg');
+    const dltListField = document.querySelector('input[name="dltTemplateList"]');
+    const dltIdField = document.querySelector('input[name="dltTemplateId"]');
+
+    if (!senderId) return;
+
+    fetch(`/get-template-by-sender/?sender_id=${senderId}`)
+        .then(res => res.json())
+        .then(data => {
+            console.log("Fetched templates:", data);
+            if (Array.isArray(data) && data.length > 0) {
+                const tpl = data[0];
+                textMsgField.value = tpl.message_template || '';
+                dltListField.value = tpl.template_identifier || '';
+                dltIdField.value = tpl.dlt_template_id || '';
+                document.getElementById('previewText').textContent = tpl.message_template || 'Your Message';
+            } else {
+                textMsgField.value = '';
+                dltListField.value = '';
+                dltIdField.value = '';
+                document.getElementById('previewText').textContent = 'Your Message';
+            }
+        })
+        .catch(err => console.error('Template fetch error:', err));
+});
+</script>
+
+{% endblock %}

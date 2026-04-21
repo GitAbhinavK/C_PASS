@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- ================= CARD 1 : CREATE ================= -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5>Manage Hash</h5>
+        </div>
+        <div class="card-body">
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="row">
+
+                    <!-- USER DROPDOWN -->
+                    <div class="col-md-4 mb-3">
+                        <label>User Name</label>
+                        <select name="user_name" class="form-control" required>
+                            <option value="">Select User</option>
+                            {% for u in users %}
+                                <option value="{{ u.user_id }}">{{ u.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- TYPE -->
+                    <div class="col-md-4 mb-3">
+                        <label>Type</label>
+                        <select name="type" id="typeSelect" class="form-control" required>
+                            <option value="">Select Type</option>
+                            <option value="ON">ON</option>
+                            <option value="OFF">OFF</option>
+                            <option value="PROVIDE_TM">PROVIDE_TM</option>
+                            <option value="PACKET_TM">PACKET_TM</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- ON FIELDS -->
+                <div class="row" id="onFields" style="display:none;">
+
+                    <div class="col-md-4 mb-3">
+                        <label>Sender Name</label>
+                        <select name="sender" class="form-control">
+                            <option value="">Select Sender</option>
+                            {% for s in senders %}
+                                <option value="{{ s.sender_id }}">{{ s.sender_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label>Connection Name</label>
+                        <select name="connection" class="form-control">
+                            <option value="">Select Connection</option>
+                            {% for c in connections %}
+                                <option value="{{ c.smpp_id }}">{{ c.connect_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- PROVIDE TM -->
+                <div class="row" id="provideTMField" style="display:none;">
+                    <div class="col-md-4 mb-3">
+                        <label>Provide TM</label>
+                        <input type="text" name="provide_tm" class="form-control">
+                    </div>
+                </div>
+
+                <!-- PACKET TM -->
+                <div class="row" id="packetTMField" style="display:none;">
+                    <div class="col-md-4 mb-3">
+                        <label>Packet TM</label>
+                        <input type="text" name="packet_tm" class="form-control">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Save
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+
+    <!-- ================= CARD 2 : DATA TABLE ================= -->
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <h5>Saved Records</h5>
+        </div>
+        <div class="card-body table-responsive">
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Sender</th>
+                        <th>Connection</th>
+                        {% comment %} <th>PE ID</th>
+                        <th>TMID</th> {% endcomment %}
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in hash_list %}
+                    <tr>
+                        {% comment %} <td>{{ h.hash_id }}</td> {% endcomment %}
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ h.user.username }}</td>
+                        <td>{{ h.type }}</td>
+                        <td>{{ h.sender.sender_name }}</td>
+                        <td>{{ h.connection.connect_name }}</td>
+                        {% comment %} <td>{{ h.pe_id }}</td>
+                        <td>{{ h.tmid }}</td> {% endcomment %}
+                        <td>{{ h.created_at }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No Data Found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+    const typeSelect = document.getElementById("typeSelect");
+    const onFields = document.getElementById("onFields");
+    const provideTMField = document.getElementById("provideTMField");
+    const packetTMField = document.getElementById("packetTMField");
+
+    typeSelect.addEventListener("change", function () {
+        const value = this.value;
+
+        onFields.style.display = "none";
+        provideTMField.style.display = "none";
+        packetTMField.style.display = "none";
+
+        if (value === "ON") {
+            onFields.style.display = "flex";
+        }
+        else if (value === "PROVIDE_TM") {
+            provideTMField.style.display = "flex";
+        }
+        else if (value === "PACKET_TM") {
+            packetTMField.style.display = "flex";
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Menu{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Menu</h2>
+      <p class="subtitle">All available options and features</p>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="dashboard-grid">
+        <!-- Dashboard - All users can see -->
+        <a href="{% url 'dashboard' %}" class="text-decoration-none">
+            <div class="card-box">
+                <i class="fas fa-tachometer-alt card-icon"></i>
+                <div class="card-title">Dashboard</div>
+                <div class="card-sub">Overview & Stats</div>
+            </div>
+        </a>
+
+        <!-- System Management Section Cards -->
+        {% if user.is_superuser or permissions.can_manage_users or permissions.can_manage_credits %}
+            <!-- Company - Only Django Super User -->
+            {% if user.is_superuser %}
+            <a href="{% url 'company_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-building card-icon"></i>
+                    <div class="card-title">Companies</div>
+                    <div class="card-sub">Company Profiles</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Roles - Only Django Super User -->
+            {% if user.is_superuser %}
+            <a href="{% url 'role_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-user-shield card-icon"></i>
+                    <div class="card-title">Roles</div>
+                    <div class="card-sub">Access Levels</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Users - Django Super User, Super Admin, Support Admin, Reseller -->
+            {% if user.is_superuser or permissions.can_manage_users %}
+            <a href="{% url 'user_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-users card-icon"></i>
+                    <div class="card-title">Users</div>
+                    <div class="card-sub">Accounts & Permissions</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Wallet - Django Super User, Super Admin, Support Admin, Reseller -->
+            {% if user.is_superuser or permissions.can_manage_credits %}
+            <a href="{% url 'wallet_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-wallet card-icon"></i>
+                    <div class="card-title">Wallet</div>
+                    <div class="card-sub">Balance & Transactions</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Transaction Report - Django Super User, Super Admin, Support Admin, Reseller -->
+            {% if user.is_superuser or permissions.can_manage_credits %}
+            <a href="{% url 'credit_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-file-invoice-dollar card-icon"></i>
+                    <div class="card-title">Transaction Report</div>
+                    <div class="card-sub">Balance & Recharges</div>
+                </div>
+            </a>
+            {% endif %}
+        {% endif %}
+
+        <!-- SMS Configuration Section Cards -->
+        {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes %}
+            <!-- SMPP Connections - Only Django Super User & Super Admin -->
+            {% if user.is_superuser or permissions.can_manage_smpp %}
+            <a href="{% url 'smpp_connections' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-plug card-icon"></i>
+                    <div class="card-title">SMPP Connections</div>
+                    <div class="card-sub">Configure SMPP Bind</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Routes - Django Super User, Super Admin, Support Admin -->
+            {% if user.is_superuser or permissions.can_manage_routes %}
+            <a href="{% url 'routing_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-route card-icon"></i>
+                    <div class="card-title">Routes</div>
+                    <div class="card-sub">Create & Manage Routes</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Routing Mapping - Based on SMPP & Routes access -->
+            {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes %}
+            <a href="{% url 'routing_mapping_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-random card-icon"></i>
+                    <div class="card-title">Routing Mapping</div>
+                    <div class="card-sub">Assign SMPP to Routes</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Sender ID - All roles can see -->
+            <a href="{% url 'sender_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-paper-plane card-icon"></i>
+                    <div class="card-title">Sender IDs</div>
+                    <div class="card-sub">Manage Sender IDs</div>
+                </div>
+            </a>
+
+            <!-- Message Templates - All roles can see -->
+            <a href="{% url 'message_template_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-file-alt card-icon"></i>
+                    <div class="card-title">Message Templates</div>
+                    <div class="card-sub">Manage SMS Templates</div>
+                </div>
+            </a>
+        {% endif %}
+
+        <!-- Messaging Section Cards -->
+        {% if user.is_superuser or permissions.can_manage_groups or permissions.can_compose_message %}
+            <!-- Compose Message - Django Super User, Super Admin, Client -->
+            {% if user.is_superuser or permissions.can_compose_message %}
+            <a href="{% url 'submit_sm_view' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-edit card-icon"></i>
+                    <div class="card-title">Compose Message</div>
+                    <div class="card-sub">Create & Send SMS</div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Group List - Django Super User, Super Admin, Client -->
+            {% if user.is_superuser or permissions.can_manage_groups %}
+            <a href="{% url 'group_list' %}" class="text-decoration-none">
+                <div class="card-box">
+                    <i class="fas fa-users card-icon"></i>
+                    <div class="card-title">Group List</div>
+                    <div class="card-sub">Manage Contact Groups</div>
+                </div>
+            </a>
+            {% endif %}
+        {% endif %}
+
+        <!-- Reports & Analytics Section Cards -->
+        <!-- SMS Summary - All roles can see -->
+        <a href="{% url 'sms_summary' %}" class="text-decoration-none">
+            <div class="card-box">
+                <i class="fas fa-chart-pie card-icon"></i>
+                <div class="card-title">SMS Summary</div>
+                <div class="card-sub">Reports & Analytics</div>
+            </div>
+        </a>
+
+        <!-- DLR History - All roles can see -->
+        <a href="{% url 'dlr_history' %}" class="text-decoration-none">
+            <div class="card-box">
+                <i class="fas fa-history card-icon"></i>
+                <div class="card-title">DLR History</div>
+                <div class="card-sub">Delivery Reports</div>
+            </div>
+        </a>
+
+        <a href="{% url 'manage-hash' %}" class="text-decoration-none">
+        <div class="card-box">
+            <i class="fas fa-key card-icon"></i>
+            <div class="card-title">Manage Hash</div>
+            <div class="card-sub">Hash Configuration & Control</div>
+        </div>
+    </a>
+
+
+        <!-- Campaigns Section Cards -->
+        <!-- All Campaigns -->
+        <a href="#" class="text-decoration-none">
+            <div class="card-box">
+                <i class="fas fa-list card-icon"></i>
+                <div class="card-title">All Campaigns</div>
+                <div class="card-sub">View Campaigns</div>
+            </div>
+        </a>
+
+        <!-- Create Campaign -->
+        <a href="#" class="text-decoration-none">
+            <div class="card-box">
+                <i class="fas fa-plus card-icon"></i>
+                <div class="card-title">Create Campaign</div>
+                <div class="card-sub">New Campaign</div>
+            </div>
+        </a>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

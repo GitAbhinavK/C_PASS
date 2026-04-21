@@ -1,0 +1,680 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Credit Report{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-color: {{ user_company.attributes_1|default:'#ff6600' }};
+        --theme-light: rgba(255, 102, 0, 0.1);
+        --theme-dark: #e65c00;
+        
+        /* Light mode variables */
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --bg-card: #ffffff;
+        --text-primary: #212529;
+        --text-secondary: #6c757d;
+        --border-color: #e9ecef;
+        --shadow-color: rgba(0, 0, 0, 0.04);
+        --hover-color: #f5f5f5;
+    }
+
+    /* Dark mode variables */
+    [data-bs-theme="dark"] {
+        --bg-primary: #121212;
+        --bg-secondary: #1e1e1e;
+        --bg-card: #1a1a1a;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --border-color: #2d2d2d;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --hover-color: #2a2a2a;
+        
+        --theme-light: rgba(255, 102, 0, 0.2);
+    }
+
+    body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Fix text color classes */
+    .text-muted {
+        color: var(--text-secondary) !important;
+    }
+    
+    .text-white-800 {
+        color: var(--text-primary) !important;
+        font-weight: 600;
+    }
+    
+    .text-theme { 
+        color: var(--theme-color) !important; 
+    }
+    
+    .text-danger {
+        color: #ef4444 !important;
+    }
+    
+    .text-info {
+        color: #3b82f6 !important;
+    }
+    
+    .text-success {
+        color: #10b981 !important;
+    }
+
+    .bg-theme { 
+        background-color: var(--theme-color) !important; 
+    }
+    
+    .border-theme { 
+        border-color: var(--theme-color) !important; 
+    }
+    
+    .bg-theme-light { 
+        background-color: var(--theme-light) !important; 
+    }
+
+    /* Cards */
+    .card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 4px var(--shadow-color);
+        transition: transform 0.2s;
+        color: var(--text-primary);
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--shadow-color);
+    }
+
+    .card-header {
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .card-body {
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .card-footer {
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    /* Tables */
+    .table {
+        color: var(--text-primary);
+        --bs-table-bg: transparent;
+        --bs-table-striped-bg: transparent;
+        --bs-table-hover-bg: var(--hover-color);
+    }
+
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        border-top: none;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table td {
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .bg-light {
+        background-color: var(--bg-secondary) !important;
+    }
+
+    .bg-white {
+        background-color: var(--bg-card) !important;
+    }
+
+    /* Status badges */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    [data-bs-theme="dark"] .badge-completed { 
+        background-color: #064e3b; 
+        color: #a7f3d0; 
+    }
+    [data-bs-theme="dark"] .badge-pending { 
+        background-color: #78350f; 
+        color: #fde68a; 
+    }
+    [data-bs-theme="dark"] .badge-failed { 
+        background-color: #7f1d1d; 
+        color: #fecaca; 
+    }
+    [data-bs-theme="dark"] .badge-reversed { 
+        background-color: #1e3a8a; 
+        color: #bfdbfe; 
+    }
+
+    [data-bs-theme="light"] .badge-completed { 
+        background-color: #d4edda; 
+        color: #155724; 
+    }
+    [data-bs-theme="light"] .badge-pending { 
+        background-color: #fff3cd; 
+        color: #856404; 
+    }
+    [data-bs-theme="light"] .badge-failed { 
+        background-color: #f8d7da; 
+        color: #721c24; 
+    }
+    [data-bs-theme="light"] .badge-reversed { 
+        background-color: #d1ecf1; 
+        color: #0c5460; 
+    }
+
+    .amount-positive { 
+        color: #10b981; 
+        font-weight: 600; 
+    }
+    .amount-negative { 
+        color: #ef4444; 
+        font-weight: 600; 
+    }
+
+    /* Filter card */
+    .filter-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+    }
+
+    [data-bs-theme="light"] .filter-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .stat-card {
+        border-left: 4px solid var(--theme-color);
+    }
+
+    /* Export button */
+    .export-btn {
+        border-radius: 8px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        background: var(--bg-card);
+    }
+
+    .export-btn:hover {
+        background: var(--hover-color);
+        border-color: var(--theme-color);
+        color: var(--theme-color);
+    }
+
+    /* Buttons */
+    .btn-outline-secondary {
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        background: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        border-color: var(--theme-color);
+        color: var(--theme-color);
+        background: var(--theme-light);
+    }
+
+    .btn-theme {
+        background: var(--theme-color);
+        border-color: var(--theme-color);
+        color: white;
+    }
+
+    .btn-theme:hover {
+        background: var(--theme-dark);
+        border-color: var(--theme-dark);
+        color: white;
+    }
+
+    /* Form controls */
+    .form-control, .form-select {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: var(--bg-card);
+        border-color: var(--theme-color);
+        color: var(--text-primary);
+        box-shadow: 0 0 0 0.25rem var(--theme-light);
+    }
+
+    .form-label {
+        color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--text-primary);
+    }
+
+    .font-weight-bold {
+        color: var(--text-primary);
+    }
+
+    /* Pagination */
+    .pagination .page-link {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .pagination .page-link:hover {
+        background: var(--hover-color);
+        border-color: var(--theme-color);
+        color: var(--theme-color);
+    }
+
+    .pagination .active .page-link {
+        background: var(--theme-color);
+        border-color: var(--theme-color);
+        color: white;
+    }
+
+    /* Badges */
+    .badge {
+        color: white;
+    }
+
+    .bg-success {
+        background-color: #10b981 !important;
+    }
+
+    .bg-danger {
+        background-color: #ef4444 !important;
+    }
+
+    /* Small text */
+    small {
+        color: var(--text-secondary);
+    }
+
+    .smaller {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.85rem;
+        }
+        .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-grey-800">Credit Report</h1>
+            <p class="text-muted mb-0">View and analyze all credit transactions</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary export-btn" onclick="exportToCSV()">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase text-muted mb-1">Total Credit</h6>
+                            <h3 class="mb-0">₹{{ stats.total_credit|default:0|floatformat:2|intcomma }}</h3>
+                        </div>
+                        <div class="text-theme">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase text-muted mb-1">Total Debit</h6>
+                            <h3 class="mb-0">₹{{ stats.total_debit|default:0|floatformat:2|intcomma }}</h3>
+                        </div>
+                        <div class="text-danger">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase text-muted mb-1">Total Transactions</h6>
+                            <h3 class="mb-0">{{ stats.total_transactions|default:0|intcomma }}</h3>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-exchange-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase text-muted mb-1">Net Balance</h6>
+                            <h3 class="mb-0">₹{{ stats.total_balance|default:0|floatformat:2|intcomma }}</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-balance-scale fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card filter-card mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-theme">
+                <i class="fas fa-filter me-2"></i>Filters
+            </h6>
+        </div>
+
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search</label>
+                    <input type="text" name="search" class="form-control" value="{{ search_query }}">
+                </div>
+
+                {% if is_admin %}
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">User</label>
+                    <select name="user" class="form-select">
+                        <option value="">All Users</option>
+                        {% for u in users %}
+                        <option value="{{ u.user_id }}" {% if user_filter == u.user_id|stringformat:"i" %}selected{% endif %}>{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Action Type</label>
+                    <select name="action_type" class="form-select">
+                        <option value="">All</option>
+                        <option value="Credit" {% if action_filter == "Credit" %}selected{% endif %}>Credit</option>
+                        <option value="Debit" {% if action_filter == "Debit" %}selected{% endif %}>Debit</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="COMPLETED" {% if status_filter == "COMPLETED" %}selected{% endif %}>Completed</option>
+                        <option value="PENDING" {% if status_filter == "PENDING" %}selected{% endif %}>Pending</option>
+                        <option value="FAILED" {% if status_filter == "FAILED" %}selected{% endif %}>Failed</option>
+                        <option value="REVERSED" {% if status_filter == "REVERSED" %}selected{% endif %}>Reversed</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Transaction Type</label>
+                    <select name="transaction_type" class="form-select">
+                        <option value="">All</option>
+                        <option value="WALLET_CREATION" {% if transaction_type_filter == "WALLET_CREATION" %}selected{% endif %}>Wallet Creation</option>
+                        <option value="BALANCE_UPDATE" {% if transaction_type_filter == "BALANCE_UPDATE" %}selected{% endif %}>Balance Update</option>
+                        <option value="DEDUCTION" {% if transaction_type_filter == "DEDUCTION" %}selected{% endif %}>Deduction</option>
+                        <option value="REFUND" {% if transaction_type_filter == "REFUND" %}selected{% endif %}>Refund</option>
+                        <option value="WALLET_TRANSFER" {% if transaction_type_filter == "WALLET_TRANSFER" %}selected{% endif %}>Wallet Transfer</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Min Amount</label>
+                    <input type="number" name="min_amount" class="form-control" value="{{ min_amount }}" step="0.01">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Max Amount</label>
+                    <input type="number" name="max_amount" class="form-control" value="{{ max_amount }}" step="0.01">
+                </div>
+
+                <div class="col-md-12">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-theme px-4">
+                            <i class="fas fa-search me-2"></i>Apply Filters
+                        </button>
+                        <a href="{% url 'credit_list' %}" class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i>Clear
+                        </a>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-theme">
+                <i class="fas fa-list me-2"></i>Credit Transactions
+                <span class="badge bg-theme ms-2">{{ credits.paginator.count }}</span>
+            </h6>
+            <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="fas fa-print me-1"></i>Print
+            </button>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            {% if is_admin %}<th>User</th>{% endif %}
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Transaction Type</th>
+                            <th>Starting Balance</th>
+                            <th>Ending Balance</th>
+                            <th>Reference</th>
+                            <th>Comments</th>
+                            <th class="text-end pe-4">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for credit in credits %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">#{{ credit.credit_id }}</td>
+
+                            {% if is_admin %}
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-theme-light rounded-circle d-flex align-items-center justify-content-center" style="width:32px; height:32px;">
+                                        <span class="text-theme fw-bold">{{ credit.user.username|first|upper }}</span>
+                                    </div>
+                                    <div class="ms-2">
+                                        <div class="fw-medium">{{ credit.user.username }}</div>
+                                        <small class="text-muted">{{ credit.company_name }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            {% endif %}
+
+                            <td>
+                                <span class="badge {% if credit.action_type == 'Credit' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ credit.action_type }}
+                                </span>
+                            </td>
+
+                            <td class="{% if credit.action_type == 'Credit' %}amount-positive{% else %}amount-negative{% endif %} fw-bold">
+                                {{ credit.amount|floatformat:2|intcomma }}
+                            </td>
+
+                            <td>
+                                <span class="status-badge badge-{{ credit.status|lower }}">{{ credit.status }}</span>
+                            </td>
+
+                            <td><small class="text-muted">{{ credit.transaction_type|default:"-" }}</small></td>
+
+                            <td class="text-muted">{{ credit.starting_balance|floatformat:2|intcomma|default:"-" }}</td>
+
+                            <td class="fw-medium">{{ credit.ending_balance|floatformat:2|intcomma|default:"-" }}</td>
+
+                            <td>
+                                {% if credit.reference_id %}
+                                <small>{{ credit.reference_id|truncatechars:12 }}</small>
+                                {% else %}-{% endif %}
+                            </td>
+
+                            <td>
+                                {% if credit.comments %}
+                                <small title="{{ credit.comments }}">{{ credit.comments|truncatechars:20 }}</small>
+                                {% else %}-{% endif %}
+                            </td>
+
+                            <td class="text-end pe-4">
+                                <div class="text-muted small">{{ credit.created_date|date:"d/m/Y" }}</div>
+                                <div class="text-muted smaller">{{ credit.created_date|date:"H:i" }}</div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if is_admin %}11{% else %}10{% endif %}" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No transactions found</h5>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if credits.has_other_pages %}
+        <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    Showing {{ credits.start_index }} to {{ credits.end_index }} of {{ credits.paginator.count }} entries
+                </div>
+
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if credits.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ credits.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in credits.paginator.page_range %}
+                            {% if credits.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > credits.number|add:'-3' and num < credits.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if credits.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ credits.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ credits.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+function exportToCSV() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{% url "credit_list" %}?' + params.toString();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = [...document.querySelectorAll('[data-bs-toggle="tooltip"]')];
+    tooltipTriggerList.map(t => new bootstrap.Tooltip(t));
+
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.addEventListener('change', () => {
+            if (input.value) input.form.submit();
+        });
+    });
+});
+</script>
+{% endblock %}

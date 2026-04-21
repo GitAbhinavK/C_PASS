@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SMPP Dashboard</title>
+</head>
+<body>
+<h2>SMPP Connections & Compose Message</h2>
+
+<h3>Connections</h3>
+<table border="1">
+<tr>
+<th>Name</th><th>Bind Type</th><th>Status</th><th>Action</th>
+</tr>
+{% for conn in connections %}
+<tr>
+<td>{{ conn.connect_name }}</td>
+<td>{{ conn.bind_type }}</td>
+<td>{{ conn.bind_status }}</td>
+<td>
+{% if not conn.is_alive %}
+<a href="{% url 'smpp_start' conn.smpp_id %}">Start</a>
+{% else %}
+<a href="{% url 'smpp_stop' conn.smpp_id %}">Stop</a>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
+
+<h3>Compose Message</h3>
+<form method="post">
+{% csrf_token %}
+<label>Connection:</label>
+<select name="connection">
+{% for conn in connections %}
+<option value="{{ conn.smpp_id }}">{{ conn.connect_name }}</option>
+{% endfor %}
+</select><br>
+
+<label>Sender ID:</label>
+<input type="text" name="sender_id" value="VDSLON"><br>
+
+<label>Template:</label>
+<input type="text" name="template" value="The OTP for your Change password Request is {OTP} VD STRIDE MEDIA"><br>
+
+<label>Destinations (comma-separated):</label>
+<input type="text" name="destinations" value="919999999964,918328891375"><br>
+
+<label>OTP:</label>
+<input type="text" name="otp" value="123456"><br>
+
+<input type="submit" value="Submit Message">
+</form>
+</body>
+</html>

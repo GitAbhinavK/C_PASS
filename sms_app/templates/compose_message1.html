@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-edit me-2"></i>Compose SMS Message
+                        </h4>
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-plug me-1"></i>
+                            {{ smpp_connections|length }} Active Connections
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Display Django messages -->
+                    {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Compose Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- SMPP Connection -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-plug me-1"></i>SMPP Connection *
+                                </label>
+                                <select class="form-select" name="smpp_id" required>
+                                    <option value="">Select SMPP Connection</option>
+                                    {% for connection in smpp_connections %}
+                                    <option value="{{ connection.smpp_id }}">
+                                        {{ connection.connect_name }} 
+                                        ({{ connection.ip }}:{{ connection.tr_trx_port }})
+                                        - {{ connection.bind_status }}
+                                    </option>
+                                    {% empty %}
+                                    <option value="">No active SMPP connections available</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Sender ID -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-id-card me-1"></i>Sender ID *
+                                </label>
+                                <input type="text" class="form-control" name="sender_id" 
+                                       required placeholder="e.g., TESTID, COMPANY, 123456">
+                            </div>
+                        </div>
+
+                        <!-- Template ID -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-file-alt me-1"></i>Template ID
+                                </label>
+                                <input type="number" class="form-control" name="template_id" 
+                                       placeholder="Enter DLT template ID">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Campaign Name
+                                </label>
+                                <input type="text" class="form-control" name="campaign_name" 
+                                       placeholder="e.g., OTP_Campaign, Promotion_Jan">
+                            </div>
+                        </div>
+
+                        <!-- Message Text -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Message Text *
+                            </label>
+                            <textarea class="form-control" name="message_text" 
+                                      rows="4" required 
+                                      placeholder="Enter your message here..."></textarea>
+                        </div>
+
+                        <!-- Mobile Numbers -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-mobile-alt me-1"></i>Mobile Numbers *
+                            </label>
+                            <textarea class="form-control" name="mobile_numbers" 
+                                      rows="4" required 
+                                      placeholder="Enter mobile numbers (one per line)&#10;Format: 919876543210 or +919876543210"></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-1"></i> Send Messages
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1439 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=3.0">
+
+    {% if user_company and user_company.favicon %}
+        <link rel="icon" type="image/png" href="{{ user_company.favicon.url }}">
+    {% else %}
+        <link rel="icon" type="image/png" href="{% static 'image/image.png' %}">
+    {% endif %}
+
+    <title>{% block title %}SMS Portal{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+    /* ========================================================= */
+    /*                SMS PORTAL - RESPONSIVE UI                 */
+    /*             Full Professional + Mobile Friendly           */
+    /* ========================================================= */
+
+    :root {
+        /* Theme Colors */
+        --theme-color: {{ user_company.attributes_1|default:'#FF6600' }};
+        --theme-light: rgba(255, 102, 0, 0.1);
+        --theme-dark: #e65c00;
+        
+        /* Layout */
+        --sidebar-width: 250px;
+        --sidebar-collapse-width: 70px;
+        --header-height: 60px;
+        
+        /* Light Mode Colors */
+        --header-bg: #ffffff;
+        --sidebar-bg: #ffffff;
+        --content-bg: #f5f7fb;
+        --card-bg: #ffffff;
+        --border-color: #e9ecef;
+        --shadow-color: rgba(0, 0, 0, 0.08);
+        --hover-color: #f8f9fa;
+        
+        /* Text Colors - Light */
+        --text-primary: #212529;
+        --text-secondary: #6c757d;
+        --text-muted: #6c757d;
+        --sidebar-text: #333333;
+    }
+
+    /* ========================================================= */
+    /*  DARK MODE THEME                                          */
+    /* ========================================================= */
+    .dark-mode {
+        /* Dark Mode Colors */
+        --header-bg: #1a1a1a;
+        --sidebar-bg: #1e1e1e;
+        --content-bg: #121212;
+        --card-bg: #1e1e1e;
+        --border-color: #2d2d2d;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --hover-color: #2a2a2a;
+        
+        /* Text Colors - Dark */
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --text-muted: #8a8a8a;
+        --sidebar-text: #e0e0e0;
+        
+        /* Theme adjustments for dark mode */
+        --theme-light: rgba(255, 102, 0, 0.2);
+    }
+
+    /* ========================================================= */
+    /*  GLOBAL CSS                                                */
+    /* ========================================================= */
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: var(--content-bg);
+        color: var(--text-primary);
+        display: flex;
+        min-height: 100vh;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* ========================================================= */
+    /*  SIDEBAR                                                   */
+    /* ========================================================= */
+    aside {
+        width: var(--sidebar-width);
+        background: var(--sidebar-bg);
+        position: fixed;
+        top: 0; left: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transition: width var(--speed), left var(--speed);
+        box-shadow: 2px 0 15px var(--shadow-color);
+        z-index: 200;
+        overflow: hidden;
+        border-right: 1px solid var(--border-color);
+    }
+
+    aside.collapsed { width: var(--sidebar-collapse-width); }
+
+    /* Mobile Hidden */
+    aside.mobile-hidden { 
+        left: calc(-1 * var(--sidebar-width));
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+        height: var(--header-height);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--sidebar-bg);
+    }
+
+    .logo-full {
+        height: 40px;
+        transition: opacity 0.3s;
+        filter: brightness(1);
+    }
+
+    .logo-icon {
+        height: 35px;
+        width: 35px;
+        object-fit: contain;
+        display: none;
+    }
+
+    .dark-mode .logo-full,
+    .dark-mode .logo-icon {
+        filter: brightness(1.2);
+    }
+
+    aside.collapsed .logo-full {
+        display: none;
+    }
+    aside.collapsed .logo-icon {
+        display: block;
+    }
+
+    /* Sidebar Menu */
+    .sidebar-menu {
+        flex-grow: 1;
+        padding: 15px 0;
+        overflow-y: auto;
+    }
+
+    aside a,
+    aside button {
+        display: flex;
+        align-items: center;
+        padding: 14px 20px;
+        text-decoration: none;
+        color: var(--sidebar-text);
+        font-size: 15px;
+        font-weight: 500;
+        gap: 15px;
+        transition: all 0.3s ease;
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    aside i {
+        min-width: 25px;
+        font-size: 18px;
+        color: var(--theme-color);
+        transition: color 0.3s ease;
+    }
+
+    aside a:hover,
+    aside button:hover {
+        background: var(--theme-light);
+        color: var(--theme-color);
+        transform: translateX(5px);
+    }
+    aside a:hover i,
+    aside button:hover i {
+        color: var(--theme-color);
+    }
+
+    /* Active link state */
+    aside a.active {
+        background: var(--theme-color);
+        color: white !important;
+        position: relative;
+    }
+    aside a.active i {
+        color: white !important;
+    }
+    aside a.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--theme-color);
+    }
+
+    /* Sidebar Text Hide On Collapse */
+    aside.collapsed .link-text {
+        display: none;
+    }
+
+    .badge {
+        background: var(--theme-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: auto;
+        min-width: 25px;
+        text-align: center;
+    }
+
+    /* Submenu */
+    .submenu {
+        display: none;
+        flex-direction: column;
+        background: var(--hover-color);
+        padding-left: 0;
+        margin: 0;
+    }
+    .submenu a {
+        padding: 12px 20px 12px 60px;
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .expandable::after {
+        content: "\f107";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        margin-left: auto;
+        transition: transform 0.3s ease;
+        color: var(--text-secondary);
+    }
+
+    .expandable.open::after {
+        transform: rotate(180deg);
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+        border-top: 1px solid var(--border-color);
+        padding: 10px;
+        background: var(--sidebar-bg);
+    }
+
+    /* ========================================================= */
+    /*  CONTENT AREA                                              */
+    /* ========================================================= */
+    .content-area {
+        margin-left: var(--sidebar-width);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        transition: margin-left 0.3s ease;
+        min-height: 100vh;
+    }
+
+    aside.collapsed ~ .content-area {
+        margin-left: var(--sidebar-collapse-width);
+    }
+
+    /* ========================================================= */
+    /*  HEADER (TOP NAVBAR)                                      */
+    /* ========================================================= */
+    header {
+        height: var(--header-height);
+        background: var(--header-bg);
+        display: flex;
+        align-items: center;
+        padding: 0 25px;
+        box-shadow: 0 2px 10px var(--shadow-color);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    #toggle-btn {
+        background: none;
+        border: none;
+        font-size: 22px;
+        color: var(--theme-color);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    #toggle-btn:hover {
+        background: var(--theme-light);
+        transform: scale(1.1);
+    }
+
+    #back-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: var(--theme-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 8px;
+        border-radius: 8px;
+        display: none;
+    }
+
+    #back-btn:hover {
+        background: var(--theme-light);
+        transform: translateX(-3px);
+    }
+
+    .app-title {
+        font-size: 1.5rem;
+        margin-left: 20px;
+        font-weight: 600;
+        flex: 1;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+    }
+
+    .user-info {
+        color: var(--text-secondary);
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .role-badge {
+        font-weight: 500;
+        color: var(--theme-color);
+        margin-left: 10px;
+        padding: 3px 10px;
+        background: var(--theme-light);
+        border-radius: 15px;
+        font-size: 12px;
+    }
+
+    /* ========================================================= */
+    /*  MAIN CONTENT                                              */
+    /* ========================================================= */
+    main {
+        padding: 10px;
+        flex: 1;
+        background: var(--content-bg);
+        min-height: calc(100vh - var(--header-height));
+    }
+
+    /* Dashboard Grid Styles */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    /* Card Box */
+    .card-box {
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: all 0.25s ease;
+        padding: 15px 10px;
+        cursor: pointer;
+        border-left: 4px solid var(--theme-color);
+        text-align: center;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid var(--border-color);
+    }
+
+    .card-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    /* Icon */
+    .card-icon {
+        font-size: 26px;
+        color: var(--theme-color);
+        margin-bottom: 6px;
+    }
+
+    /* Title */
+    .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 5px;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    /* Sub Text */
+    .card-sub {
+        color: var(--text-muted);
+        font-size: 10px;
+        margin-top: 2px;
+        line-height: 1.2;
+        max-width: 90%;
+    }
+
+    /* Cards */
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+
+    .card {
+        background: var(--card-bg);
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px var(--shadow-color);
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        border-left: 5px solid var(--theme-color);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px var(--shadow-color);
+    }
+
+    /* Professional Page Styles */
+    .page-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px var(--shadow-color);
+        overflow: hidden;
+        min-height: 80vh;
+        border: 1px solid var(--border-color);
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .page-header h1, .page-header h2 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .page-header .subtitle {
+        margin: 8px 0 0;
+        font-size: 16px;
+        opacity: 0.9;
+        font-weight: 400;
+        letter-spacing: 0.2px;
+    }
+
+    .page-header .stats {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .stat-badge.success { background: rgba(40, 167, 69, 0.9); color: white; }
+    .stat-badge.danger { background: rgba(220, 53, 69, 0.9); color: white; }
+    .stat-badge.warning { background: rgba(255, 193, 7, 0.9); color: black; }
+    .stat-badge.info { background: rgba(23, 162, 184, 0.9); color: white; }
+
+    .page-content {
+        padding: 20px;
+    }
+
+    .filter-section {
+        background: var(--hover-color);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px var(--shadow-color);
+        border: 1px solid var(--border-color);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+        outline: none;
+    }
+
+    .btn-primary-custom {
+        background: var(--theme-color);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+    }
+
+    .btn-primary-custom:hover {
+        background: var(--theme-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 102, 0, 0.4);
+    }
+
+    .btn-secondary-custom {
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--hover-color);
+        border-color: var(--theme-color);
+        color: var(--theme-color);
+    }
+
+    /* Theme button classes */
+    .btn-theme {
+        background: var(--theme-color);
+        border: 1px solid var(--theme-color);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-theme:hover {
+        background: var(--theme-dark);
+        border-color: var(--theme-dark);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+    }
+
+    .btn-outline-theme {
+        background: transparent;
+        border: 1px solid var(--theme-color);
+        color: var(--theme-color);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-theme:hover {
+        background: var(--theme-color);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+    }
+
+    .data-table-container {
+        overflow-x: auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px var(--shadow-color);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+        color: white;
+    }
+
+    .data-table th {
+        padding: 15px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .data-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    .data-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--hover-color);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px var(--shadow-color);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .dark-mode .data-table tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+        display: inline-block;
+    }
+
+    .status-delivered { background: #28a745; color: white; }
+    .status-failed { background: #dc3545; color: white; }
+    .status-pending { background: #ffc107; color: black; }
+    .status-unknown { background: #6c757d; color: white; }
+
+    /* Logo and favicon thumbnail styles */
+    .logo-thumb {
+        width: 24px;
+        height: 24px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+    }
+
+    .favicon-img {
+        width: 20px;
+        height: 20px;
+        object-fit: cover;
+        border-radius: 2px;
+        border: 1px solid var(--border-color);
+    }
+
+    /* ========================================================= */
+    /*  DARK MODE SPECIFIC STYLES FOR CHILD PAGES                */
+    /* ========================================================= */
+
+    /* Form controls in dark mode */
+    .dark-mode .form-control,
+    .dark-mode .form-select,
+    .dark-mode .form-control:focus,
+    .dark-mode .form-select:focus {
+        background-color: #2a2a2a;
+        border-color: #3a3a3a;
+        color: var(--text-primary);
+    }
+
+    .dark-mode .form-control:focus,
+    .dark-mode .form-select:focus {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25);
+    }
+
+    /* Tables in dark mode */
+    .dark-mode .table {
+        color: var(--text-primary);
+        --bs-table-bg: transparent;
+        --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+        --bs-table-hover-bg: rgba(255, 255, 255, 0.08);
+        border-color: var(--border-color);
+    }
+
+    .dark-mode .table th {
+        background-color: #1e1e1e;
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .dark-mode .table td {
+        border-color: var(--border-color);
+    }
+
+    .dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Cards in child pages */
+    .dark-mode .card,
+    .dark-mode .card-header,
+    .dark-mode .card-body,
+    .dark-mode .card-footer {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    /* Badges in dark mode */
+    .dark-mode .badge.bg-light,
+    .dark-mode .badge.bg-secondary {
+        background-color: #2a2a2a !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* Buttons in dark mode */
+    .dark-mode .btn-outline-secondary {
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        background: transparent;
+    }
+
+    .dark-mode .btn-outline-secondary:hover {
+        border-color: var(--theme-color);
+        background: var(--theme-light);
+        color: var(--theme-color);
+    }
+
+    /* Alerts in dark mode */
+    .dark-mode .alert {
+        background-color: #2a2a2a;
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    /* Pagination in dark mode */
+    .dark-mode .page-link {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .dark-mode .page-link:hover {
+        background-color: var(--hover-color);
+        border-color: var(--theme-color);
+        color: var(--theme-color);
+    }
+
+    .dark-mode .page-item.active .page-link {
+        background-color: var(--theme-color);
+        border-color: var(--theme-color);
+        color: white;
+    }
+
+    /* Modal in dark mode */
+    .dark-mode .modal-content {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .dark-mode .modal-header,
+    .dark-mode .modal-footer {
+        border-color: var(--border-color);
+    }
+
+    /* Dropdowns in dark mode */
+    .dark-mode .dropdown-menu {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+
+    .dark-mode .dropdown-item {
+        color: var(--text-primary);
+    }
+
+    .dark-mode .dropdown-item:hover {
+        background-color: var(--hover-color);
+        color: var(--theme-color);
+    }
+
+    /* Progress bars in dark mode */
+    .dark-mode .progress {
+        background-color: #2a2a2a;
+    }
+
+    /* List groups in dark mode */
+    .dark-mode .list-group-item {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    /* Tooltips in dark mode */
+    .dark-mode .tooltip .tooltip-inner {
+        background-color: var(--card-bg);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+    /* Popovers in dark mode */
+    .dark-mode .popover {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .dark-mode .popover-header {
+        background-color: #2a2a2a;
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    /* Accordion in dark mode */
+    .dark-mode .accordion-button {
+        background-color: var(--card-bg);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+
+    .dark-mode .accordion-button:not(.collapsed) {
+        background-color: #2a2a2a;
+        color: var(--theme-color);
+    }
+
+    .dark-mode .accordion-body {
+        background-color: var(--card-bg);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+
+    /* Custom scrollbar for dark mode */
+    .dark-mode ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    .dark-mode ::-webkit-scrollbar-track {
+        background: #2a2a2a;
+        border-radius: 5px;
+    }
+
+    .dark-mode ::-webkit-scrollbar-thumb {
+        background: #4a4a4a;
+        border-radius: 5px;
+    }
+
+    .dark-mode ::-webkit-scrollbar-thumb:hover {
+        background: var(--theme-color);
+    }
+
+    /* Dark mode for professional classes */
+    .dark-mode .page-container {
+        background: var(--card-bg);
+        box-shadow: 0 4px 20px var(--shadow-color);
+    }
+
+    .dark-mode .filter-section {
+        background: var(--hover-color);
+        border-color: var(--border-color);
+    }
+
+    .dark-mode .filter-group input,
+    .dark-mode .filter-group select {
+        background: var(--card-bg);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .dark-mode .filter-group input:focus,
+    .dark-mode .filter-group select:focus {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+    }
+
+    .dark-mode .btn-secondary-custom {
+        background: var(--card-bg);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .dark-mode .btn-secondary-custom:hover {
+        background: var(--hover-color);
+        border-color: var(--theme-color);
+        color: var(--theme-color);
+    }
+
+    .dark-mode .data-table-container {
+        background: var(--card-bg);
+        border-color: var(--border-color);
+    }
+
+    .dark-mode .data-table {
+        color: var(--text-primary);
+    }
+
+    .dark-mode .data-table th {
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+    }
+
+    .dark-mode .data-table td {
+        border-color: var(--border-color);
+    }
+
+    .dark-mode .data-table tbody tr:hover {
+        background: var(--hover-color);
+    }
+
+    .dark-mode .page-header {
+        background: linear-gradient(135deg, var(--theme-color), var(--theme-dark));
+    }
+
+    .dark-mode .stat-badge.success { background: rgba(40, 167, 69, 0.8); }
+    .dark-mode .stat-badge.danger { background: rgba(220, 53, 69, 0.8); }
+    .dark-mode .stat-badge.warning { background: rgba(255, 193, 7, 0.8); color: #000; }
+    .dark-mode .stat-badge.info { background: rgba(23, 162, 184, 0.8); }
+
+    /* Credits styling */
+    .credits {
+        font-weight: bold;
+        color: var(--theme-color);
+        margin-left: 10px;
+        padding: 4px 12px;
+        background: var(--theme-light);
+        border-radius: 20px;
+        font-size: 14px;
+    }
+
+    /* Dark mode — header text overrides */
+    .dark-mode header .user-info,
+    .dark-mode header .user-info * {
+        color: #ffffff !important;
+    }
+
+    .dark-mode header .app-title {
+        color: #ffffff !important;
+    }
+
+    .dark-mode header .role-badge {
+        background: rgba(255, 102, 0, 0.25) !important;
+        color: #ffffff !important;
+    }
+
+    .dark-mode header .credits {
+        background: rgba(255, 102, 0, 0.25) !important;
+        color: #ffffff !important;
+    }
+
+    /* Theme toggle button */
+    #theme-toggle {
+        background: var(--theme-light);
+        border: none;
+        color: var(--theme-color);
+        font-size: 20px;
+        cursor: pointer;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px var(--shadow-color);
+    }
+
+    #theme-toggle:hover {
+        background: var(--theme-color);
+        color: white;
+        transform: rotate(30deg);
+    }
+
+    /* ========================================================= */
+    /*  RESPONSIVE BREAKPOINTS                                    */
+    /* ========================================================= */
+
+    /* Large Screens (1440px+) */
+    @media (min-width:1440px){
+        main { padding: 25px; }
+        .cards { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    }
+
+    /* Laptops (992px - 1200px) */
+    @media (max-width:1200px){
+        :root { --sidebar-width: 230px; }
+        main { padding: 20px; }
+    }
+
+    /* Tablets (768px - 992px) */
+    @media (max-width:992px){
+        aside {
+            width: var(--sidebar-collapse-width);
+        }
+        .content-area {
+            margin-left: var(--sidebar-collapse-width);
+        }
+        header { padding: 0 15px; }
+        .app-title { font-size: 1.3rem; }
+        .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    }
+
+    /* Mobile (below 768px) */
+    @media (max-width:768px){
+        aside {
+            left: calc(-1 * var(--sidebar-width));
+            width: var(--sidebar-width);
+        }
+        aside.show {
+            left: 0;
+        }
+
+        .content-area {
+            margin-left: 0;
+        }
+
+        .app-title { display: none; }
+
+        main { padding: 15px; }
+        .user-info { flex-wrap: wrap; gap: 10px; }
+        .cards { grid-template-columns: 1fr; }
+        .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    }
+
+    /* Extra Small Phones (below 480px) */
+    @media (max-width:480px){
+        header { 
+            padding: 0 10px; 
+            flex-wrap: wrap;
+            height: auto;
+            min-height: var(--header-height);
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+        main { padding: 10px; }
+        .card { padding: 20px; }
+        .card-box { padding: 15px 10px; }
+        .user-info { 
+            order: 3; 
+            width: 100%; 
+            margin-top: 10px;
+            justify-content: space-between;
+        }
+        #theme-toggle { 
+            width: 40px; 
+            height: 40px; 
+            font-size: 18px; 
+        }
+        .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+    }
+    </style>
+</head>
+<body>
+
+<aside id="sidebar">
+    <div class="sidebar-header">
+        {% if user_company and user_company.logo %}
+            <img src="{{ user_company.logo.url }}" alt="Company Logo" class="logo-full">
+        {% else %}
+            <img src="{% static 'image/digiwhiff.png' %}" alt="Digiwhiff Logo" class="logo-full">
+        {% endif %}
+
+        {% if user_company and user_company.favicon %}
+            <img src="{{ user_company.favicon.url }}" alt="Company Icon" class="logo-icon">
+        {% else %}
+            <img src="{% static 'image/image.png' %}" alt="Digiwhiff Icon" class="logo-icon">
+        {% endif %}
+    </div>
+
+    <div class="sidebar-menu">
+        <!-- Settings/Menu link - Always visible -->
+        <a href="{% url 'setting' %}">
+            <i class="fas fa-sliders-h"></i>
+            <span class="link-text">Menu</span>
+        </a>
+        
+        <!-- Dashboard - All users can see -->
+        <a href="{% url 'dashboard' %}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span class="link-text">Dashboard</span>
+        </a>
+        
+        <!-- System Management - Only for users with permission -->
+        {% if user.is_superuser or permissions.can_manage_users or permissions.can_manage_credits %}
+        <a href="javascript:void(0);" class="expandable" data-target="system-management">
+            <i class="fas fa-cogs"></i>
+            <span class="link-text">System Management</span>
+        </a>
+        <div class="submenu" id="system-management">
+            <!-- Company - Only Super Users -->
+            {% if user.is_superuser %}
+            <a href="{% url 'company_list' %}"><i class="fas fa-building"></i><span class="link-text">Companies</span></a>
+            <a href="{% url 'role_list' %}"><i class="fas fa-user-shield"></i><span class="link-text">Roles</span></a>
+            {% endif %}
+            
+            <!-- Users - Super User, Super Admin, Support Admin, Reseller -->
+            {% if user.is_superuser or permissions.can_manage_users %}
+            <a href="{% url 'user_list' %}"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+            {% endif %}
+            
+            <!-- Wallet & Credits - Super User, Super Admin, Support Admin, Reseller -->
+            {% if user.is_superuser or permissions.can_manage_credits %}
+            <a href="{% url 'wallet_list' %}"><i class="fas fa-wallet"></i><span class="link-text">Wallet</span></a>
+            <a href="{% url 'credit_list' %}"><i class="fas fa-file-invoice-dollar"></i><span class="link-text">Transaction Report</span></a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- SMS Configuration - Only for users with SMPP or Routes permission -->
+        {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes %}
+        <a href="javascript:void(0);" class="expandable" data-target="sms-config">
+            <i class="fas fa-sms"></i>
+            <span class="link-text">SMS Configuration</span>
+        </a>
+        <div class="submenu" id="sms-config">
+            <!-- SMPP Connections - Only Super User & Super Admin -->
+            {% if user.is_superuser or permissions.can_manage_smpp %}
+            <a href="{% url 'smpp_connections' %}"><i class="fas fa-plug"></i><span class="link-text">SMPP Connections</span></a>
+            {% endif %}
+            
+            <!-- Routes - Super User, Super Admin, Support Admin -->
+            {% if user.is_superuser or permissions.can_manage_routes %}
+            <a href="{% url 'routing_list' %}"><i class="fas fa-route"></i><span class="link-text">Routes</span></a>
+            {% endif %}
+            
+            <!-- Routing Mapping - Based on SMPP & Routes access -->
+            {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes %}
+            <a href="{% url 'routing_mapping_list' %}"><i class="fas fa-random"></i><span class="link-text">Routing Mapping</span></a>
+            {% endif %}
+            
+            <!-- Sender IDs & Templates - All roles can see -->
+            <a href="{% url 'sender_list' %}"><i class="fas fa-paper-plane"></i><span class="link-text">Sender IDs</span></a>
+            <a href="{% url 'message_template_list' %}"><i class="fas fa-file-alt"></i><span class="link-text">Message Templates</span></a>
+        </div>
+        {% endif %}
+        
+        <!-- Messaging - For users with Groups or Compose permission -->
+        {% if user.is_superuser or permissions.can_manage_groups or permissions.can_compose_message %}
+        <a href="javascript:void(0);" class="expandable" data-target="messaging">
+            <i class="fas fa-envelope"></i>
+            <span class="link-text">Messaging</span>
+        </a>
+        <div class="submenu" id="messaging">
+            <!-- Compose Message - Super User, Super Admin, Client -->
+            {% if user.is_superuser or permissions.can_compose_message %}
+            <a href="{% url 'submit_sm_view' %}"><i class="fas fa-edit"></i><span class="link-text">Compose Message</span></a>
+            {% endif %}
+            
+            <!-- Group List - Super User, Super Admin, Client -->
+            {% if user.is_superuser or permissions.can_manage_groups %}
+            <a href="{% url 'group_list' %}"><i class="fas fa-users"></i><span class="link-text">Group List</span></a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Reports & Analytics - All roles can see -->
+        <a href="javascript:void(0);" class="expandable" data-target="reports">
+            <i class="fas fa-chart-bar"></i>
+            <span class="link-text">Reports & Analytics</span>
+        </a>
+        <div class="submenu" id="reports">
+            <a href="{% url 'sms_summary' %}"><i class="fas fa-chart-pie"></i><span class="link-text">SMS Summary</span></a>
+            <a href="{% url 'dlr_history' %}"><i class="fas fa-history"></i><span class="link-text">DLR History</span></a>
+        </div>
+        
+        <!-- Campaigns - Optional, shown to all for now -->
+        <a href="javascript:void(0);" class="expandable" data-target="campaigns">
+            <i class="fas fa-bullhorn"></i>
+            <span class="link-text">Campaigns</span>
+            <span class="badge" id="pendingCampaigns">0</span>
+        </a>
+        <div class="submenu" id="campaigns">
+            <a href="#"><i class="fas fa-list"></i><span class="link-text">All Campaigns</span></a>
+            <a href="#"><i class="fas fa-plus"></i><span class="link-text">Create Campaign</span></a>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <form method="post" action="{% url 'logout' %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" style="
+                background:none; border:none; color: var(--sidebar-text); width:100%; text-align:left;
+                padding:12px 20px; display:flex; align-items:center; gap:15px; cursor:pointer;
+            ">
+                <i class="fas fa-sign-out-alt"></i><span class="link-text">Logout</span>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<div class="content-area">
+    <header>
+        <button id="toggle-btn"><i class="fas fa-bars"></i></button>
+        <button id="back-btn" onclick="history.back()" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+        <span class="app-title">SMS Portal Dashboard</span>
+        <span class="user-info">
+            Welcome, {{ user.username }} 
+            <span class="role-badge">{{ permissions.user_role|default:"Guest" }}</span>
+            <span class="credits">(Credits: {{ available_credits }})</span>
+        </span>
+        <span class="user-info">
+            <button id="theme-toggle" class="ms-3">
+                <i class="fas fa-moon"></i>
+            </button>
+        </span>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    // Back button — show whenever there is a previous page in history
+    const backBtn = document.getElementById('back-btn');
+    if (window.history.length > 1) {
+        backBtn.style.display = 'block';
+    }
+
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const contentArea = document.querySelector('.content-area');
+
+    // Initial setup for the sidebar collapse based on screen size
+    if (window.innerWidth > 992) {
+        sidebar.classList.remove('collapsed');
+    } else if (window.innerWidth <= 992) {
+        sidebar.classList.add('collapsed');
+    }
+
+    // Toggle sidebar functionality
+    toggleBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            // Mobile view: Toggle the 'show' class to slide it in/out
+            sidebar.classList.toggle('show');
+        } else {
+            // Desktop view: Toggle the 'collapsed' class
+            sidebar.classList.toggle('collapsed');
+        }
+    });
+
+    // Expandable submenus functionality
+    $('.expandable').click(function(){
+        const submenu = $(this).next('.submenu');
+        
+        // If sidebar is collapsed, prevent expansion on mobile
+        if (sidebar.classList.contains('collapsed') && window.innerWidth <= 992) {
+            // Just toggle the sidebar instead
+            sidebar.classList.toggle('collapsed');
+            return; 
+        }
+
+        // Close other submenus and remove 'open' class
+        $('.submenu').not(submenu).slideUp(200);
+        $('.expandable').not(this).removeClass('open');
+
+        // Toggle current submenu and 'open' class
+        submenu.slideToggle(200);
+        $(this).toggleClass('open');
+    });
+
+    // Function to toggle submenu from dashboard cards
+    function toggleSubmenu(submenuId) {
+        const sidebar = document.getElementById('sidebar');
+        
+        // If sidebar is collapsed, expand it first
+        if (sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            // Wait for sidebar animation then open submenu
+            setTimeout(() => {
+                const expandable = document.querySelector(`[data-target="${submenuId}"]`);
+                if (expandable) {
+                    $(expandable).click();
+                }
+            }, 300);
+        } else {
+            // Directly open submenu
+            const expandable = document.querySelector(`[data-target="${submenuId}"]`);
+            if (expandable) {
+                $(expandable).click();
+            }
+        }
+    }
+
+    // Auto-close sidebar on mobile after link click
+    $(document).on('click', 'aside a, aside .submenu a', function() {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+        }
+    });
+
+    // Simulate AJAX updates for badges
+    function updatePendingCampaigns() {
+        let pending = Math.floor(Math.random() * 10) + 1;
+        $('#pendingCampaigns').text(pending);
+    }
+    setInterval(updatePendingCampaigns, 5000);
+
+    // ===============================
+    //  DARK MODE TOGGLE
+    // ===============================
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+
+    // Toggle theme
+    themeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark-mode');
+
+        if (document.documentElement.classList.contains('dark-mode')) {
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            localStorage.setItem('theme', 'dark');
+        } else {
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            localStorage.setItem('theme', 'light');
+        }
+    });
+
+    // Add active class to current page in sidebar
+    $(document).ready(function() {
+        const currentPath = window.location.pathname;
+        $('.sidebar-menu a, .submenu a').each(function() {
+            const linkPath = $(this).attr('href');
+            if (linkPath && linkPath !== 'javascript:void(0);') {
+                if (linkPath === currentPath || 
+                    (currentPath.includes(linkPath) && linkPath !== '/')) {
+                    $(this).addClass('active');
+                    // Also make parent expandable active
+                    const parentExpandable = $(this).closest('.submenu').prev('.expandable');
+                    if (parentExpandable.length) {
+                        parentExpandable.addClass('active');
+                        parentExpandable.next('.submenu').slideDown(200);
+                        parentExpandable.addClass('open');
+                    }
+                }
+            }
+        });
+
+        // If on settings page, highlight settings link
+        if (currentPath.includes('setting') || currentPath === '/setting/') {
+            $('a[href*="setting"]').addClass('active');
+        }
+    });
+
+    // Initialize Bootstrap components with dark mode support
+    document.addEventListener('DOMContentLoaded', function() {
+        // Reinitialize tooltips for dark mode
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 768) {
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isClickOnToggleBtn = toggleBtn.contains(event.target);
+            
+            if (!isClickInsideSidebar && !isClickOnToggleBtn && sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        }
+    });
+</script>
+</body>
+</html>

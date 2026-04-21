@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h4>SMPP Connections</h4>
+    </div>
+    <a href="{% url 'smpp_form' %}" class="btn btn-info">
+      <i class="fas fa-info-circle"></i> Add New Connection
+    </a>
+  </div>
+
+  <div class="page-content">
+    <!-- Alert container for dynamic messages -->
+    <div id="alertContainer"></div>
+
+    <div class="data-table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Connection Name</th>
+            <th>IP Address</th>
+            <th>TX Port</th>
+            <th>RX Port</th>
+            <th>Bind Status</th>
+            <th>Connection Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for connection in connections %}
+          <tr>
+            <td>{{ connection.smpp_id }}</td>
+            <td>{{ connection.connect_name|default:"N/A" }}</td>
+            <td>{{ connection.ip|default:"N/A" }}</td>
+            <td>{{ connection.tr_trx_port|default:"N/A" }}</td>
+            <td>{{ connection.rx_port|default:"N/A" }}</td>
+            <td>
+              <span class="badge 
+                {% if connection.bind_status == 'BOUND' %}bg-success
+                {% elif connection.bind_status == 'UNBOUND' %}bg-secondary
+                {% elif connection.bind_status == 'FAILED' %}bg-danger
+                {% else %}bg-warning{% endif %}">
+                {{ connection.bind_status|default:"UNBOUND" }}
+              </span>
+            </td>
+            <td>
+              <span class="badge 
+                {% if connection.is_alive %}bg-success
+                {% else %}bg-danger{% endif %}">
+                {% if connection.is_alive %}Alive{% else %}Dead{% endif %}
+              </span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <!-- FIXED: Use correct URL name -->
+                <a href="{% url 'smpp_connection_detail' connection.smpp_id %}" 
+                   class="btn btn-info">
+                  <i class="fas fa-info-circle"></i> Details
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">No connections configured</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+
+{% endblock %}
