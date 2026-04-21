@@ -4468,6 +4468,153 @@ if not log.handlers:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
+def _submit_sms_batch_in_background(payload):
+    """Submit a compose batch after the HTTP response has returned."""
+    close_old_connections()
+    try:
+        user = User.objects.get(user_id=payload["user_id"])
+        wallet = Wallet.objects.get(wallet_id=payload["wallet_id"])
+        compose_msg = ComposeMessage.objects.get(sms_id=payload["compose_message_id"])
+        chosen_smpp = SmppConnection.objects.get(smpp_id=payload["smpp_id"])
+
+        session = SMPPSessionManager.get(chosen_smpp.smpp_id)
+        if not session:
+            session = SMPPSessionManager.start_session(chosen_smpp.smpp_id)
+        if not session:
+            logger.error("Unable to create SMPP session for async batch %s", payload["batch_request_id"])
+            return
+
+        from .smpp_dlr_manager import DLRManager
+        DLRManager.start_listener(session)
+
+        line_buffer = []
+        success_count = 0
+        failed_count = 0
+        batch_size = int(payload.get("db_batch_size") or 1000)
+
+        for idx, mob in enumerate(payload["mobile_numbers"], 1):
+            tlvs = dict(payload.get("extra_tlvs") or {})
+
+            if chosen_smpp.dlt_enable:
+                if payload.get("peid") and chosen_smpp.dlt_entity_id_tag:
+                    tlvs[tagname_to_int(chosen_smpp.dlt_entity_id_tag)] = payload["peid"]
+                if payload.get("template_id") and chosen_smpp.send_dlt_template_id and chosen_smpp.dlt_template_id_tag:
+                    tlvs[tagname_to_int(chosen_smpp.dlt_template_id_tag)] = payload["template_id"]
+                if payload.get("tmid"):
+                    tlvs[0x1402] = payload["tmid"]
+
+            try:
+                result = session.sms_sender.submit_sm_with_tlvs(
+                    source_addr=payload["sender_name"],
+                    destination_addr=mob,
+                    message=payload["message"],
+                    smpp_config=payload["smpp_config"],
+                    tlvs_map=tlvs
+                )
+                if not result:
+                    raise Exception("No response from SMPP server")
+
+                command_status = result.get("command_status", 0)
+                if command_status != 0:
+                    raise Exception(result.get("command_status_text", f"SMPP Error: {command_status}"))
+
+                message_id = result.get("message_id")
+                sequence_number = result.get("sequence_number")
+                success_count += 1
+                line_buffer.append(ComposeMessageLine(
+                    compose_message=compose_msg,
+                    mobile_number=mob,
+                    text_mes=payload["message"],
+                    sender=payload["sender_name"],
+                    receiver=mob,
+                    content=payload["message"],
+                    message_id=message_id,
+                    sequence_number=sequence_number,
+                    submit_time=timezone.now(),
+                    status=result.get("command_status_text", "SUBMITTED"),
+                    encoding=payload["text_type"],
+                    content_id=payload["template_id"],
+                    tmid=payload["tmid"] or "",
+                    parts=payload["parts_per_message"],
+                    attributes_1=message_id or "",
+                    attributes_2=payload["batch_request_id"],
+                    attributes_3=f"SMSC: {chosen_smpp.connect_name}",
+                    attributes_4=f"Encoding: {payload['text_type']}",
+                    attributes_5=json.dumps({
+                        "submitted": True,
+                        "wallet_deduction_type": wallet.deduction_type,
+                        "smpp_id": chosen_smpp.smpp_id,
+                        "tlv_count": len(tlvs),
+                        "ton_used": payload["source_ton"],
+                        "npi_used": payload["source_npi"],
+                        "dlr_requested": payload["smpp_config"].get("registered_delivery", 0) == 1,
+                        "message_id": message_id,
+                        "command_status": command_status,
+                    }),
+                    create_by=payload["username"]
+                ))
+            except Exception as exc:
+                failed_count += 1
+                line_buffer.append(ComposeMessageLine(
+                    compose_message=compose_msg,
+                    mobile_number=mob,
+                    text_mes=payload["message"],
+                    sender=payload["sender_name"],
+                    receiver=mob,
+                    content=payload["message"],
+                    status="FAILED",
+                    reason=str(exc)[:2000],
+                    submit_time=timezone.now(),
+                    parts=payload["parts_per_message"],
+                    attributes_1="",
+                    attributes_2=payload["batch_request_id"],
+                    attributes_3=f"SMSC: {chosen_smpp.connect_name}",
+                    attributes_4=f"TMID Attempted: {(payload['tmid'] or '')[:50]}...",
+                    attributes_5=json.dumps({
+                        "error": str(exc)[:500],
+                        "tlv_count": len(tlvs),
+                        "ton_attempted": payload["source_ton"],
+                        "npi_attempted": payload["source_npi"],
+                    }),
+                    create_by=payload["username"]
+                ))
+                logger.error("Async submit failed for %s via %s: %s", mob, chosen_smpp.connect_name, exc)
+
+            if len(line_buffer) >= batch_size:
+                ComposeMessageLine.objects.bulk_create(line_buffer)
+                line_buffer.clear()
+
+            if idx % 1000 == 0:
+                logger.info(
+                    "Async batch %s progress: %s/%s submitted, success=%s failed=%s",
+                    payload["batch_request_id"], idx, len(payload["mobile_numbers"]), success_count, failed_count
+                )
+
+        if line_buffer:
+            ComposeMessageLine.objects.bulk_create(line_buffer)
+
+        if wallet.deduction_type == "SUBMISSION" and failed_count > 0:
+            refund_parts = failed_count * payload["parts_per_message"]
+            if refund_parts > 0:
+                WalletService.create_refund_entry(
+                    user=user,
+                    wallet=wallet,
+                    request_id=payload["batch_request_id"],
+                    refund_parts=refund_parts,
+                    reason=f"Refund for {failed_count} failed messages",
+                    comments=f"Auto-refund for failed submissions in batch {payload['batch_request_id']}"
+                )
+
+        logger.info(
+            "Async batch %s complete: success=%s failed=%s total=%s",
+            payload["batch_request_id"], success_count, failed_count, len(payload["mobile_numbers"])
+        )
+    except Exception:
+        logger.exception("Async SMS batch crashed: %s", payload.get("batch_request_id"))
+    finally:
+        close_old_connections()
+
+
 from django.shortcuts import render
 from django.db import transaction
 import re
@@ -5197,6 +5344,56 @@ def send_sms(request):
                 create_by=user.username,
                 last_updated_by=user.username
             )
+
+        worker_payload = {
+            "user_id": user.user_id,
+            "username": user.username,
+            "wallet_id": wallet.wallet_id,
+            "compose_message_id": compose_msg.sms_id,
+            "smpp_id": chosen_smpp.smpp_id,
+            "mobile_numbers": mobile_numbers,
+            "message": message,
+            "sender_name": actual_sender_name,
+            "template_id": template_id,
+            "peid": peid,
+            "tmid": tmid,
+            "text_type": text_type,
+            "parts_per_message": parts_per_message,
+            "batch_request_id": batch_request_id,
+            "extra_tlvs": extra_tlvs,
+            "smpp_config": smpp_config,
+            "source_ton": source_ton,
+            "source_npi": source_npi,
+        }
+        threading.Thread(
+            target=_submit_sms_batch_in_background,
+            args=(worker_payload,),
+            daemon=True,
+            name=f"SMSSubmit-{batch_request_id}"
+        ).start()
+
+        user_credit = Credit.objects.filter(user=user).order_by('-credit_id').first()
+        recent_messages = ComposeMessageLine.objects.filter(
+            compose_message__user_id=user.user_id
+        ).order_by('-submit_time')[:10]
+
+        return render(request, "submit_sm.html", {
+            "connections": connections,
+            "senders": senders,
+            "result": (
+                f"✔ Batch accepted. Background submission started for {len(mobile_numbers)} "
+                f"message(s) using Sender: {actual_sender_name} via {chosen_smpp.connect_name}"
+            ),
+            "message_id": batch_request_id,
+            "status_text": f"Queued {len(mobile_numbers)} messages for background submit via {chosen_smpp.connect_name}",
+            "seq_number": batch_request_id,
+            "user_credit": user_credit,
+            "recent_messages": recent_messages,
+            "tmid_used": tmid if tmid else "",
+            "ton_used": source_ton,
+            "npi_used": source_npi,
+            "sender_type": "Alphanumeric" if actual_sender_name.isalpha() else "Numeric"
+        })
 
         # SEND SMS WITH PROPER TLV HANDLING
         line_objs = []

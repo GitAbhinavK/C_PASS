@@ -3,7 +3,6 @@ import socket
 import re
 import logging
 import time
-import select
 from typing import Dict, Optional, Tuple, List
 
 # Import your TLV utilities
