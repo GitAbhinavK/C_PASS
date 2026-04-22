@@ -81,7 +81,7 @@
         {% endif %}
 
         <!-- SMS Configuration Section Cards -->
-        {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes %}
+        {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes or permissions.can_manage_senders or permissions.can_manage_templates %}
             <!-- SMPP Connections - Only Django Super User & Super Admin -->
             {% if user.is_superuser or permissions.can_manage_smpp %}
             <a href="{% url 'smpp_connections' %}" class="text-decoration-none">
@@ -115,7 +115,8 @@
             </a>
             {% endif %}
 
-            <!-- Sender ID - All roles can see -->
+            <!-- Sender ID -->
+            {% if user.is_superuser or permissions.can_manage_senders %}
             <a href="{% url 'sender_list' %}" class="text-decoration-none">
                 <div class="card-box">
                     <i class="fas fa-paper-plane card-icon"></i>
@@ -123,8 +124,10 @@
                     <div class="card-sub">Manage Sender IDs</div>
                 </div>
             </a>
+            {% endif %}
 
-            <!-- Message Templates - All roles can see -->
+            <!-- Message Templates -->
+            {% if user.is_superuser or permissions.can_manage_templates %}
             <a href="{% url 'message_template_list' %}" class="text-decoration-none">
                 <div class="card-box">
                     <i class="fas fa-file-alt card-icon"></i>
@@ -132,6 +135,7 @@
                     <div class="card-sub">Manage SMS Templates</div>
                 </div>
             </a>
+            {% endif %}
         {% endif %}
 
         <!-- Messaging Section Cards -->

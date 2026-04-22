@@ -1169,8 +1169,8 @@
         </div>
         {% endif %}
         
-        <!-- SMS Configuration - Only for users with SMPP or Routes permission -->
-        {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes %}
+        <!-- SMS Configuration - shown when any SMS setup item is allowed -->
+        {% if user.is_superuser or permissions.can_manage_smpp or permissions.can_manage_routes or permissions.can_manage_senders or permissions.can_manage_templates %}
         <a href="javascript:void(0);" class="expandable" data-target="sms-config">
             <i class="fas fa-sms"></i>
             <span class="link-text">SMS Configuration</span>
@@ -1191,9 +1191,13 @@
             <a href="{% url 'routing_mapping_list' %}"><i class="fas fa-random"></i><span class="link-text">Routing Mapping</span></a>
             {% endif %}
             
-            <!-- Sender IDs & Templates - All roles can see -->
+            <!-- Sender IDs & Templates -->
+            {% if user.is_superuser or permissions.can_manage_senders %}
             <a href="{% url 'sender_list' %}"><i class="fas fa-paper-plane"></i><span class="link-text">Sender IDs</span></a>
+            {% endif %}
+            {% if user.is_superuser or permissions.can_manage_templates %}
             <a href="{% url 'message_template_list' %}"><i class="fas fa-file-alt"></i><span class="link-text">Message Templates</span></a>
+            {% endif %}
         </div>
         {% endif %}
         
