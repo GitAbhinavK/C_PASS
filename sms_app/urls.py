@@ -79,6 +79,7 @@ urlpatterns = [
     path('submit_sm_view', views.send_sms, name='submit_sm_view'),
     path('ajax/get_templates/', views.get_templates_for_sender, name='get_templates_for_sender'),
     path('ajax/get_templates_for_sender/', views.get_templates_for_sender, name='get_templates_for_sender'),
+    path('ajax/get_group_contacts/', views.get_group_contacts, name='get_group_contacts'),
     path('walletsk/', views.wallet_list, name='wallet_list'),
     path('walletsk/add/', views.add_wallet, name='add_wallet'),
     path('walletsk/edit/<int:wallet_id>/', views.edit_wallet, name='edit_wallet'),

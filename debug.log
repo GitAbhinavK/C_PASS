@@ -41209,3 +41209,343 @@ Not Found: /favicon.ico
 "GET /dlr-history/ HTTP/1.1" 200 92194
 "GET /summary/ HTTP/1.1" 200 75621
 "GET /submit_sm_view HTTP/1.1" 200 100740
+Watching for file changes with StatReloader
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET / HTTP/1.1" 400 72701
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /favicon.ico HTTP/1.1" 400 72653
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73442
+D:\sms_projectV3\sms_projectV3\sms_projectV1\sms_project\sms_project\settings.py changed, reloading.
+Watching for file changes with StatReloader
+Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\sms_projectV3\sms_projectV1\sms_project\venv\Lib\site-packages\django\http\request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.0.240:8000'. You may need to add '192.168.0.240' to ALLOWED_HOSTS.
+"GET /appointments/get-all/ HTTP/1.1" 400 73402
+D:\sms_projectV3\sms_projectV3\sms_projectV1\sms_project\sms_project\settings.py changed, reloading.
+Watching for file changes with StatReloader
+"GET / HTTP/1.1" 302 0
+"GET /login/ HTTP/1.1" 200 19692
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 24530
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+"POST /login/ HTTP/1.1" 302 0
+"GET /dashboard/ HTTP/1.1" 200 43081
+"GET /media/logos/logo_1.jpg HTTP/1.1" 200 24112
+"GET /media/favicons/favicon_1_FnTyIFf.png HTTP/1.1" 200 23309
+"GET /submit_sm_view HTTP/1.1" 200 100740
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+"GET /submit_sm_view HTTP/1.1" 200 100740
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /appointments/get-all/
+"GET /appointments/get-all/ HTTP/1.1" 404 24560
+Not Found: /opd/
+"GET /opd/?appointment_id=22 HTTP/1.1" 404 24527
+"GET /setting/ HTTP/1.1" 200 45263
+"GET /groups/ HTTP/1.1" 200 47060
+"POST /groups/create/ HTTP/1.1" 302 0
+"GET /groups/ HTTP/1.1" 200 48152
+"GET /submit_sm_view HTTP/1.1" 200 100740
+"GET /submit_sm_view HTTP/1.1" 200 100718
+D:\sms_projectV3\sms_projectV3\sms_projectV1\sms_project\sms_app\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\sms_projectV3\sms_projectV3\sms_projectV1\sms_project\sms_app\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\sms_projectV3\sms_projectV3\sms_projectV1\sms_project\sms_app\urls.py changed, reloading.
+Watching for file changes with StatReloader
+"GET /submit_sm_view HTTP/1.1" 200 105775
+"GET /ajax/get_group_contacts/?group_id=2 HTTP/1.1" 200 78
+"GET /submit_sm_view HTTP/1.1" 200 105775
+"GET /ajax/get_group_contacts/?group_id=2 HTTP/1.1" 200 78
+"GET /setting/ HTTP/1.1" 200 45265
+"GET /groups/ HTTP/1.1" 200 48154
+"POST /groups/create/ HTTP/1.1" 302 0
+"GET /groups/ HTTP/1.1" 200 49460
+"GET /submit_sm_view HTTP/1.1" 200 105991
+"GET /ajax/get_group_contacts/?group_id=3 HTTP/1.1" 200 95
+"GET /ajax/get_group_contacts/?group_id=3 HTTP/1.1" 200 95
+"GET /ajax/get_group_contacts/?group_id=2 HTTP/1.1" 200 78
+"GET /submit_sm_view HTTP/1.1" 200 105991
+"GET /ajax/get_group_contacts/?group_id=3 HTTP/1.1" 200 95
+"GET /setting/ HTTP/1.1" 200 45265
+"GET /groups/ HTTP/1.1" 200 49460
+"POST /groups/create/ HTTP/1.1" 302 0
+"GET /groups/ HTTP/1.1" 200 50641
+"GET /setting/ HTTP/1.1" 200 45265
+"GET /submit_sm_view HTTP/1.1" 200 106209
+"GET /ajax/get_group_contacts/?group_id=4 HTTP/1.1" 200 77
+"GET /summary/ HTTP/1.1" 200 75623
+"GET /dlr-history/ HTTP/1.1" 200 92196
+"GET /summary/ HTTP/1.1" 200 75623
+"GET /submit_sm_view HTTP/1.1" 200 112192
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+"GET /ajax/get_group_contacts/?group_id=4 HTTP/1.1" 200 77
+"POST /submit_sm_view HTTP/1.1" 200 111662
+"GET /submit_sm_view HTTP/1.1" 200 112192
+"GET /dashboard/ HTTP/1.1" 200 43083
+"GET /message-template/ HTTP/1.1" 200 111142
+"GET /submit_sm_view HTTP/1.1" 200 112192
+"GET /summary/ HTTP/1.1" 200 76295
+"GET /summary/ HTTP/1.1" 200 76295
+"GET /submit_sm_view HTTP/1.1" 200 112192
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+"GET /ajax/get_group_contacts/?group_id=4 HTTP/1.1" 200 77
+"POST /submit_sm_view HTTP/1.1" 200 111662
+"GET /submit_sm_view HTTP/1.1" 200 112192
+"GET /submit_sm_view HTTP/1.1" 200 112192
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+Not Found: /opd/
+"GET /opd/?appointment_id=22 HTTP/1.1" 404 24811
+"GET /submit_sm_view HTTP/1.1" 200 112192
+Not Found: /opd/
+"GET /opd/?appointment_id=22 HTTP/1.1" 404 24811
+Not Found: /opd/
+"GET /opd/?appointment_id=22 HTTP/1.1" 404 24811
+Not Found: /opd/
+"GET /opd/?appointment_id=22 HTTP/1.1" 404 24811
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+"GET / HTTP/1.1" 302 0
+"GET /login/ HTTP/1.1" 200 19692
+"GET /submit_sm_view HTTP/1.1" 200 113089
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+Watching for file changes with StatReloader
+"GET /groups/ HTTP/1.1" 200 50641
+"GET /submit_sm_view HTTP/1.1" 200 113089
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+"GET /ajax/get_group_contacts/?group_id=2 HTTP/1.1" 200 78
+"GET /groups/ HTTP/1.1" 200 50641
+"GET /submit_sm_view HTTP/1.1" 200 113089
+"GET /ajax/get_templates_for_sender/?sender_id=3 HTTP/1.1" 200 541
+"GET /groups/ HTTP/1.1" 200 50641
+"GET /summary/ HTTP/1.1" 200 77707

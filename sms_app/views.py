@@ -5072,6 +5072,7 @@ def send_sms(request):
 
     def render_submit_page(**extra_context):
         hash_entry = HashTable.objects.filter(user=user).first()
+        groups = GroupHeader.objects.filter(user=user).order_by('group_name')
         context = {
             "connections": connections,
             "senders": senders,
@@ -5081,6 +5082,7 @@ def send_sms(request):
             "wallet_balance": wallet.balance if wallet else Decimal("0"),
             "wallet_plan_type": wallet.plan_type if wallet else "",
             "wallet_deduction_type": wallet.deduction_type if wallet else "",
+            "groups": groups,
         }
         context.update(extra_context)
         return render(request, "submit_sm.html", context)
@@ -5961,6 +5963,20 @@ def get_templates_for_sender(request):
         "id", "template_identifier", "dlt_template_id", "message_template"  # Add this field
     )
     return JsonResponse(list(templates), safe=False)
+
+
+@login_required
+def get_group_contacts(request):
+    group_id = request.GET.get('group_id')
+    try:
+        group = GroupHeader.objects.get(group_id=group_id, user=request.user)
+        numbers = list(
+            GroupLine.objects.filter(group=group)
+            .values_list('mobile_number', flat=True)
+        )
+        return JsonResponse({'numbers': numbers, 'group_name': group.group_name, 'count': len(numbers)})
+    except GroupHeader.DoesNotExist:
+        return JsonResponse({'error': 'Group not found'}, status=404)
 
 @login_required
 def get_template_content(request):

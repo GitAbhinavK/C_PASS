@@ -534,6 +534,61 @@ textarea.form-control { resize: vertical; }
 
 .dark-mode .btn-close { filter: invert(1); }
 
+/* ---- Template Variable Editor ---- */
+.template-editor {
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    min-height: 88px;
+    background: var(--card-bg);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.8;
+    word-break: break-word;
+    cursor: default;
+}
+
+.tpl-static {
+    color: var(--text-secondary);
+    background: var(--hover-color);
+    border-radius: 3px;
+    padding: 0 2px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.tpl-var {
+    border: none;
+    border-bottom: 2px solid var(--theme-color);
+    background: var(--theme-light);
+    color: var(--theme-color);
+    font-weight: 700;
+    font-size: 0.88rem;
+    outline: none;
+    padding: 2px 6px;
+    border-radius: 4px 4px 0 0;
+    min-width: 70px;
+    max-width: 180px;
+    vertical-align: middle;
+}
+.tpl-var::placeholder { color: var(--theme-color); opacity: 0.55; font-style: italic; }
+.tpl-var:focus { background: rgba(255,102,0,0.18); }
+
+/* ---- Language warning bar ---- */
+.lang-warn {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin-top: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+.lang-warn.show   { display: flex; }
+.lang-warn.warn   { background: rgba(255,193,7,0.15); color: #a07800; border: 1px solid rgba(255,193,7,0.35); }
+.lang-warn.error  { background: rgba(220,53,69,0.10); color: #c00020; border: 1px solid rgba(220,53,69,0.30); }
+
 /* Responsive */
 @media (max-width: 1100px) {
     .content-box { flex-direction: column; padding: 14px; }
@@ -738,8 +793,15 @@ textarea.form-control { resize: vertical; }
                                 <label class="form-label"><i class="fas fa-comment-dots"></i>Message</label>
                                 <textarea class="form-control" id="messageContent" name="message" rows="4"
                                           placeholder="Enter your message here…" required></textarea>
+                                <!-- Template variable editor (hidden until template with {#var#} is loaded) -->
+                                <div id="templateEditor" class="template-editor d-none"></div>
+                                <!-- Language mismatch warning -->
+                                <div class="lang-warn" id="langWarn">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span id="langWarnText"></span>
+                                </div>
                                 <div class="msg-stats-bar">
-                                    <small>Characters: <strong id="charCount">0</strong><span id="charLimit">/160</span></small>
+                                    <small>Chars: <strong id="charCount">0</strong><span id="charLimit">/160</span> &nbsp;·&nbsp; Remaining: <strong id="charRemaining">160</strong></small>
                                     <span class="parts-badge" id="encodingInfo">English · 1 part</span>
                                 </div>
                             </div>
@@ -822,6 +884,39 @@ textarea.form-control { resize: vertical; }
                         </div>
                     </div>
 
+                    <!-- Group Selector (shown only when Group send type is selected) -->
+                    <div class="settings-section d-none" id="groupSelectorSection">
+                        <h5><i class="fas fa-users"></i>Select Group</h5>
+                        <div class="custom-dropdown" id="groupDdWrapper">
+                            <button type="button" class="dropdown-trigger" id="groupDropdownBtn">
+                                <span class="selected-option">-- Select Group --</span>
+                                <i class="fas fa-chevron-down chevron"></i>
+                            </button>
+                            <div class="dd-menu" id="groupDropdownMenu">
+                                <div class="dd-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="form-control search-input" placeholder="Search groups…" id="groupSearch">
+                                    <button type="button" class="search-clear" id="groupClear">✕</button>
+                                </div>
+                                <div class="dd-items" id="groupItems">
+                                    {% for group in groups %}
+                                    <div class="dd-item" data-value="{{ group.group_id }}" data-label="{{ group.group_name }}">
+                                        {{ group.group_name }}
+                                    </div>
+                                    {% empty %}
+                                    <div class="dd-no-results" style="display:block;">No groups found</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="dd-no-results" id="groupNoResults" style="display:none;">No results found</div>
+                            </div>
+                            <input type="hidden" name="group_id" id="groupHiddenInput" value="">
+                        </div>
+                        <div id="groupContactsBadge" class="form-hint mt-2" style="display:none;">
+                            <i class="fas fa-users" style="color:var(--theme-color);"></i>
+                            <span id="groupContactsCount">0</span> contacts loaded
+                        </div>
+                    </div>
+
                     <!-- Options Toggles -->
                     <div class="settings-section">
                         <h5><i class="fas fa-toggle-on"></i>Options</h5>
@@ -879,10 +974,11 @@ textarea.form-control { resize: vertical; }
         </div>
     </div><!-- /.content-box -->
 </div><!-- /.page-container -->
+{% endblock %}
 
-<!-- External libs -->
+{% block scripts %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -895,8 +991,19 @@ const messageTA       = document.getElementById('messageContent');
 const mobileTA        = document.getElementById('mobileNumbersField');
 const charCountEl     = document.getElementById('charCount');
 const charLimitEl     = document.getElementById('charLimit');
+const charRemainingEl = document.getElementById('charRemaining');
 const encodingInfoEl  = document.getElementById('encodingInfo');
+const templateEditor  = document.getElementById('templateEditor');
+const langWarnEl      = document.getElementById('langWarn');
+const langWarnText    = document.getElementById('langWarnText');
 let csvNumbers        = [];
+
+// ── GSM-7 charset ────────────────────────────────────────────────────
+const GSM7 = new Set(
+    '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?' +
+    '¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§ ¿abcdefghijklmnopqrstuvwxyzäöñüà'
+);
+function isGsm7(str) { return [...str].every(c => GSM7.has(c)); }
 
 // CSV modal refs
 const csvModalElement = document.getElementById('csvUploadModal');
@@ -934,14 +1041,44 @@ const templateHidden  = document.getElementById('templateHiddenInput');
 
 // ── Message stats ────────────────────────────────────────────────────
 function updateMessageStats() {
-    const textType    = document.querySelector('input[name="text_type"]:checked')?.value || 'english';
-    const limit       = textType === 'english' ? 160 : 70;
-    const len         = messageTA.value.length;
-    const parts       = Math.max(1, Math.ceil(len / limit));
+    const textType   = document.querySelector('input[name="text_type"]:checked')?.value || 'english';
+    const isEng      = textType === 'english';
+    // Single-SMS limits / multipart limits per spec
+    const singleLim  = isEng ? 160 : 70;
+    const multiLim   = isEng ? 153 : 67;
+    const len        = messageTA.value.length;
 
-    charCountEl.textContent   = len;
-    charLimitEl.textContent   = `/${limit}`;
-    encodingInfoEl.textContent = `${textType === 'english' ? 'English' : 'Unicode'} · ${parts} part${parts > 1 ? 's' : ''}`;
+    let parts, perPart;
+    if (len === 0 || len <= singleLim) {
+        parts   = 1;
+        perPart = singleLim;
+    } else {
+        parts   = Math.ceil(len / multiLim);
+        perPart = multiLim;
+    }
+    const remaining = parts * perPart - len;
+
+    charCountEl.textContent    = len;
+    charLimitEl.textContent    = `/${perPart}`;
+    charRemainingEl.textContent = remaining;
+    encodingInfoEl.textContent = `${isEng ? 'English' : 'Unicode (Hindi)'} · ${parts} part${parts !== 1 ? 's' : ''}`;
+
+    // Language mismatch warning
+    if (len > 0) {
+        const allGsm = isGsm7(messageTA.value);
+        if (isEng && !allGsm) {
+            langWarnEl.className  = 'lang-warn show error';
+            langWarnText.textContent = 'Non-English characters detected — switch to Unicode mode or remove Hindi/special chars.';
+        } else if (!isEng && allGsm) {
+            langWarnEl.className  = 'lang-warn show warn';
+            langWarnText.textContent = 'Message is plain English — switch to English mode to save credits (160 chars vs 70).';
+        } else {
+            langWarnEl.className = 'lang-warn';
+        }
+    } else {
+        langWarnEl.className = 'lang-warn';
+    }
+
     updateNumberStats();
 }
 
@@ -969,15 +1106,72 @@ function updateNumberStats() {
     }
 }
 
+// ── Template variable editor ─────────────────────────────────────────
+const VAR_RE = /(\{#[^#]*#\})/g;
+
+function initTemplateEditor(text) {
+    const hasVars = VAR_RE.test(text);
+    VAR_RE.lastIndex = 0;
+
+    if (!hasVars) {
+        // Normal free-text mode
+        templateEditor.classList.add('d-none');
+        messageTA.style.display = '';
+        return;
+    }
+
+    // Switch to variable editor mode
+    messageTA.style.display = 'none';
+    templateEditor.classList.remove('d-none');
+    templateEditor.innerHTML = '';
+
+    const parts = text.split(VAR_RE);   // alternates: static, {#var#}, static, …
+    parts.forEach(part => {
+        if (VAR_RE.test(part)) {
+            VAR_RE.lastIndex = 0;
+            const inp = document.createElement('input');
+            inp.type        = 'text';
+            inp.className   = 'tpl-var';
+            inp.placeholder = part;          // shows {#var#} as hint
+            inp.setAttribute('autocomplete', 'off');
+            inp.addEventListener('input', () => { syncEditorToTextarea(); updateMessageStats(); });
+            templateEditor.appendChild(inp);
+        } else if (part) {
+            VAR_RE.lastIndex = 0;
+            const span = document.createElement('span');
+            span.className   = 'tpl-static';
+            span.textContent = part;
+            templateEditor.appendChild(span);
+        }
+    });
+    VAR_RE.lastIndex = 0;
+    syncEditorToTextarea();
+}
+
+function syncEditorToTextarea() {
+    let msg = '';
+    templateEditor.childNodes.forEach(node => {
+        if (node.classList && node.classList.contains('tpl-static')) {
+            msg += node.textContent;
+        } else if (node.tagName === 'INPUT') {
+            msg += node.value || '';
+        }
+    });
+    messageTA.value = msg;
+}
+
+function resetTemplateEditor() {
+    templateEditor.classList.add('d-none');
+    templateEditor.innerHTML = '';
+    messageTA.style.display  = '';
+    messageTA.value          = '';
+}
+
 messageTA.addEventListener('input', updateMessageStats);
 mobileTA.addEventListener('input', updateNumberStats);
 document.querySelectorAll('input[name="text_type"]').forEach(r => r.addEventListener('change', updateMessageStats));
 
 // ── CSV Upload ────────────────────────────────────────────────────────
-document.getElementById('sendCSV').addEventListener('change', function() {
-    if (this.checked) csvModal.show();
-});
-
 browseBtn.addEventListener('click', () => csvFileInput.click());
 
 csvFileInput.addEventListener('change', e => {
@@ -1214,13 +1408,12 @@ async function loadTemplates(senderId) {
 templateHidden.addEventListener('change', function() {
     const id = this.value;
     if (!id) return;
-    // Find the matching item directly from the DOM (avoids stale-object issues)
     const item = Array.from(templateItems.querySelectorAll('.dd-item'))
                       .find(el => el.dataset.value === id);
     if (item) {
         document.getElementById('template_id_display').value = item.dataset.dltId || '';
         if (item.dataset.msgTpl) {
-            messageTA.value = item.dataset.msgTpl;
+            initTemplateEditor(item.dataset.msgTpl);
             updateMessageStats();
         }
     }
@@ -1256,9 +1449,54 @@ document.querySelectorAll('.toggle-label').forEach(label => {
     });
 });
 
+// ── Group dropdown refs ───────────────────────────────────────────────
+const groupSelectorSection = document.getElementById('groupSelectorSection');
+const groupDropdownBtn     = document.getElementById('groupDropdownBtn');
+const groupDropdownMenu    = document.getElementById('groupDropdownMenu');
+const groupSearch          = document.getElementById('groupSearch');
+const groupClear           = document.getElementById('groupClear');
+const groupItems           = document.getElementById('groupItems');
+const groupNoRes           = document.getElementById('groupNoResults');
+const groupHidden          = document.getElementById('groupHiddenInput');
+const groupContactsBadge   = document.getElementById('groupContactsBadge');
+const groupContactsCount   = document.getElementById('groupContactsCount');
+let groupNumbers           = [];
+
+setupDropdown(groupDropdownBtn, groupDropdownMenu, groupSearch, groupClear, groupItems, groupNoRes, groupHidden);
+
+groupHidden.addEventListener('change', async function() {
+    const gid = this.value;
+    if (!gid) return;
+    try {
+        const res  = await fetch(`/ajax/get_group_contacts/?group_id=${gid}`);
+        const data = await res.json();
+        if (data.error) {
+            Swal.fire({ icon:'error', title:'Error', text: data.error, confirmButtonColor:'#ff6600' });
+            return;
+        }
+        groupNumbers = data.numbers || [];
+        const existing = mobileTA.value.trim() ? mobileTA.value.trim().split(/[\s,]+/).filter(Boolean) : [];
+        const merged   = [...new Set([...existing, ...groupNumbers])];
+        mobileTA.value = merged.join(', ');
+        groupContactsCount.textContent = groupNumbers.length;
+        groupContactsBadge.style.display = 'block';
+        updateNumberStats();
+        Swal.fire({
+            icon:'success', title:'Group Loaded',
+            html:`<b>${data.group_name}</b><br>${groupNumbers.length} contact(s) added to recipients.`,
+            confirmButtonColor:'#ff6600', timer:2500, timerProgressBar:true
+        });
+    } catch(err) {
+        Swal.fire({ icon:'error', title:'Error', text:'Could not fetch group contacts.', confirmButtonColor:'#ff6600' });
+    }
+});
+
 // ── Send type ─────────────────────────────────────────────────────────
 document.querySelectorAll('input[name="send_type"]').forEach(r => {
     r.addEventListener('change', function() {
+        // Show/hide group selector
+        groupSelectorSection.classList.toggle('d-none', this.value !== 'group');
+
         if (this.value === 'csv') {
             if (csvModal) {
                 csvModal.show();
@@ -1270,6 +1508,14 @@ document.querySelectorAll('input[name="send_type"]').forEach(r => {
                     confirmButtonColor:'#ff6600'
                 });
             }
+        }
+
+        // Clear group selection when switching away from group
+        if (this.value !== 'group') {
+            groupHidden.value = '';
+            groupDropdownBtn.querySelector('.selected-option').textContent = '-- Select Group --';
+            groupContactsBadge.style.display = 'none';
+            groupNumbers = [];
         }
     });
 });
@@ -1291,6 +1537,16 @@ document.getElementById('resetBtn').addEventListener('click', e => {
     templateSearch.disabled = true;
     closeAllDropdowns();
 
+    // Reset group
+    groupHidden.value = '';
+    groupDropdownBtn.querySelector('.selected-option').textContent = '-- Select Group --';
+    groupSearch.value = '';
+    groupClear.style.display = 'none';
+    filterItems(groupItems, groupNoRes, '');
+    groupContactsBadge.style.display = 'none';
+    groupNumbers = [];
+    groupSelectorSection.classList.add('d-none');
+
     document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(cb => {
         cb.checked = cb.id === 'removeDuplicates';
         syncToggle(cb);
@@ -1302,6 +1558,8 @@ document.getElementById('resetBtn').addEventListener('click', e => {
     csvFileInput.value = '';
     fileInfo.classList.add('d-none');
     columnSelector.classList.add('d-none');
+    resetTemplateEditor();
+    langWarnEl.className = 'lang-warn';
     updateMessageStats();
 });
 
@@ -1310,19 +1568,23 @@ const walletPlanType = "{{ wallet_plan_type|default:''|escapejs }}";
 const walletDeductionType = "{{ wallet_deduction_type|default:''|escapejs }}";
 
 function getEstimatedCreditNeed(formData) {
-    const mobNums = (formData.get('mobile_numbers') || '').trim();
-    const msg = (formData.get('message') || '').trim();
-    const textType = formData.get('text_type') || 'english';
+    const mobNums   = (formData.get('mobile_numbers') || '').trim();
+    const msg       = (formData.get('message') || '').trim();
+    const textType  = formData.get('text_type') || 'english';
     const removeDup = formData.get('remove_duplicates') === 'enable';
 
     if (!mobNums || !msg) {
         return { recipients: 0, partsPerMessage: 0, totalPartsNeeded: 0 };
     }
 
-    const nums = mobNums.split(/[\s,]+/).filter(Boolean);
+    const nums       = mobNums.split(/[\s,]+/).filter(Boolean);
     const uniqueNums = removeDup ? [...new Set(nums)] : nums;
-    const charLimit = textType === 'english' ? 160 : 70;
-    const partsPerMessage = Math.max(1, Math.ceil(msg.length / charLimit));
+    const isEng      = textType === 'english';
+    const singleLim  = isEng ? 160 : 70;
+    const multiLim   = isEng ? 153 : 67;
+    const partsPerMessage = msg.length <= singleLim
+        ? 1
+        : Math.ceil(msg.length / multiLim);
 
     return {
         recipients: uniqueNums.length,
@@ -1345,6 +1607,31 @@ document.getElementById('smppForm').addEventListener('submit', function(e) {
     }
     if (!mobNums || !msg) {
         Swal.fire({ icon:'error', title:'Missing Info', text:'Please enter mobile numbers and message.', confirmButtonColor:'#ff6600' });
+        return;
+    }
+
+    // Language validation - BLOCK mismatches
+    const textType   = document.querySelector('input[name="text_type"]:checked')?.value || 'english';
+    const isUnicode  = textType === 'unicode';
+    const allGsm     = isGsm7(msg);
+    
+    if (isUnicode && allGsm) {
+        Swal.fire({ 
+            icon:'error', 
+            title:'Language Mismatch - Blocked', 
+            text:'Unicode (Hindi) mode selected but message is plain English. Switch to English mode to save credits (160 vs 70 chars).', 
+            confirmButtonColor:'#ff6600' 
+        });
+        return;
+    }
+    
+    if (!isUnicode && !allGsm) {
+        Swal.fire({ 
+            icon:'error', 
+            title:'Language Mismatch - Blocked', 
+            text:'English mode selected but message contains non-English characters. Switch to Unicode mode first.', 
+            confirmButtonColor:'#ff6600' 
+        });
         return;
     }
 
